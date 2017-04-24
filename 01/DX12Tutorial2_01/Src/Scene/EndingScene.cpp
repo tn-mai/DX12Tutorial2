@@ -99,6 +99,12 @@ bool EndingScene::Load(::Scene::Context& context)
 	}
 	time = 0.0f;
 
+	const PSO& pso = GetPSO(PSOType_Sprite);
+	ID3D12DescriptorHeap* texDescHeap = graphics.csuDescriptorHeap.Get();
+	bundleId[0] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texBackground);
+	bundleId[1] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texLogo);
+	bundleId[2] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texFont);
+
 	return true;
 }
 
@@ -153,7 +159,7 @@ void EndingScene::Draw(Graphics::Graphics& graphics) const
 	spriteRenderingInfo.texDescHeap = graphics.csuDescriptorHeap.Get();
 	spriteRenderingInfo.matViewProjection = graphics.matViewProjection;
 
-	graphics.spriteRenderer.Draw(sprBackground, cellList, GetPSO(PSOType_Sprite), texBackground, spriteRenderingInfo);
-	graphics.spriteRenderer.Draw(sprLogo, cellList, GetPSO(PSOType_Sprite), texLogo, spriteRenderingInfo);
-	graphics.spriteRenderer.Draw(sprFont, cellFile->Get(0)->list.data(), GetPSO(PSOType_Sprite), texFont, spriteRenderingInfo);
+	graphics.spriteRenderer.Draw(sprBackground, cellList, bundleId[0], spriteRenderingInfo);
+	graphics.spriteRenderer.Draw(sprLogo, cellList, bundleId[1], spriteRenderingInfo);
+	graphics.spriteRenderer.Draw(sprFont, cellFile->Get(0)->list.data(), bundleId[2], spriteRenderingInfo);
 }

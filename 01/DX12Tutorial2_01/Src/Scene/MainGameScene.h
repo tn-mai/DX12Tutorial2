@@ -79,6 +79,8 @@ private:
 
 	int playerShotCycle = 0;
 	float playerShotInterval = 0;
+
+	Sprite::BundleId bundleId[3];
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_MAINGAMESCENE_H_

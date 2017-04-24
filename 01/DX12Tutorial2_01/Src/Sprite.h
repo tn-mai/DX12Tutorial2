@@ -8,6 +8,7 @@
 #include <DirectXMath.h>
 #include <wrl/client.h>
 #include <vector>
+#include <memory>
 
 namespace Resource {
 struct Texture;
@@ -69,20 +70,29 @@ struct RenderingInfo
 };
 
 /**
+* バンドルID.
+*/
+typedef std::shared_ptr<size_t> BundleId;
+
+/**
 * スプライト描画クラス.
 */
 class Renderer
 {
 public:
 	Renderer();
+	~Renderer() = default;
 	bool Init(Microsoft::WRL::ComPtr<ID3D12Device> device, int numFrameBuffer, int maxSprite, Resource::ResourceLoader& resourceLoader);
+	BundleId CreateBundle(const PSO& pso, ID3D12DescriptorHeap* texDescHeap, const Resource::Texture& texture);
 	bool Begin(int frameIndex);
-	bool Draw(const std::vector<Sprite>& spriteList, const Cell* cellList, const PSO& pso, const Resource::Texture& texture, RenderingInfo& info);
-	bool Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const PSO& pso, const Resource::Texture& texture, RenderingInfo& info);
+	bool Draw(const std::vector<Sprite>& spriteList, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
+	bool Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
 	bool End();
 	ID3D12GraphicsCommandList* GetCommandList();
 
 private:
+	void DestroyBundle(size_t bundleId);
+
 	size_t maxSpriteCount;
 	int frameBufferCount;
 
@@ -100,6 +110,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> bundleAllocator;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>> bundleList;
 };
 
 /**

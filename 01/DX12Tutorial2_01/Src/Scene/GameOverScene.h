@@ -30,6 +30,7 @@ private:
 	Sprite::FilePtr cellFile;
 	AnimationFile animationFile;
 	double time;
+	Sprite::BundleId bundleId[2];
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_GAMEOVERSCENE_H_

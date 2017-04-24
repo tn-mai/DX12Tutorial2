@@ -55,7 +55,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> prologueCommandList;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> epilogueCommandList;
-	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	HANDLE fenceEvent;
 	UINT64 fenceValue[frameBufferCount];
 	UINT64 masterFenceValue;

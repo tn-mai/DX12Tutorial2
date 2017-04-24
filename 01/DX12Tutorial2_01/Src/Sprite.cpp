@@ -6,6 +6,7 @@
 #include "PSO.h"
 #include "Json.h"
 #include "d3dx12.h"
+#include <algorithm>
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -82,6 +83,9 @@ Sprite::Sprite(const AnimationList& al, DirectX::XMFLOAT3 p, float rot, DirectX:
 {
 }
 
+/**
+* コンストラクタ.
+*/
 Renderer::Renderer() :
 	maxSpriteCount(0),
 	frameBufferCount(0),
@@ -185,7 +189,66 @@ bool Renderer::Init(ComPtr<ID3D12Device> device, int numFrameBuffer, int maxSpri
 	indexBufferView.SizeInBytes = indexListSize;
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 
+	if (FAILED(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE, IID_PPV_ARGS(&bundleAllocator)))) {
+		return false;
+	}
+	bundleList.reserve(32);
+
 	return true;
+}
+
+/**
+* バンドルを作成.
+*
+* @param pso         バンドルに設定するPSO.
+* @param texDescHeap バンドルに設定するテクスチャ用のデスクリプタヒープへのポインタ.
+* @param texture     バンドルに設定するテクスチャ.
+*
+* @return 作成に成功したら0以上のIDを持つBundleIdオブジェクトを返す.
+*         失敗したら空のBundleIdオブジェクトを返す.
+*/
+BundleId Renderer::CreateBundle(const PSO& pso, ID3D12DescriptorHeap* texDescHeap, const Resource::Texture& texture)
+{
+	ComPtr<ID3D12Device> device;
+	if (FAILED(bundleAllocator->GetDevice(IID_PPV_ARGS(&device)))) {
+		return BundleId();
+	}
+	ComPtr<ID3D12GraphicsCommandList> bundle;
+	if (FAILED(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_BUNDLE, bundleAllocator.Get(), nullptr, IID_PPV_ARGS(&bundle)))) {
+		return BundleId();
+	}
+	bundle->SetGraphicsRootSignature(pso.rootSignature.Get());
+	bundle->SetPipelineState(pso.pso.Get());
+	ID3D12DescriptorHeap* heapList[] = { texDescHeap };
+	bundle->SetDescriptorHeaps(_countof(heapList), heapList);
+	bundle->SetGraphicsRootDescriptorTable(0, texture.handle);
+	bundle->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	bundle->IASetIndexBuffer(&indexBufferView);
+	if (FAILED(bundle->Close())) {
+		return BundleId();
+	}
+	size_t id;
+	auto itr = std::find_if(bundleList.begin(), bundleList.end(), [](const ComPtr<ID3D12GraphicsCommandList>& e) { return !e; });
+	if (itr != bundleList.end()) {
+		*itr = bundle;
+		id = itr - bundleList.begin();
+	} else {
+		bundleList.push_back(bundle);
+		id = bundleList.size() - 1;
+	}
+	return BundleId(new size_t{ id }, [this](size_t* p) { this->DestroyBundle(*p); delete p; });
+}
+
+/**
+* バンドルを削除.
+*
+* @param bundleId 削除するバンドルのID.
+*/
+void Renderer::DestroyBundle(size_t bundleId)
+{
+	if (bundleId < bundleList.size()) {
+		bundleList[bundleId].Reset();
+	}
 }
 
 /**
@@ -202,15 +265,15 @@ bool Renderer::Begin(int frameIndex)
 		return false;
 	}
 
-	currentFrameIndex = frameIndex;
-	FrameResource& fr = frameResourceList[currentFrameIndex];
-
+	FrameResource& fr = frameResourceList[frameIndex];
 	if (FAILED(fr.commandAllocator->Reset())) {
 		return false;
 	}
 	if (FAILED(commandList->Reset(fr.commandAllocator.Get(), nullptr))) {
 		return false;
 	}
+
+	currentFrameIndex = frameIndex;
 	spriteCount = 0;
 	return true;
 }
@@ -226,16 +289,19 @@ bool Renderer::Begin(int frameIndex)
 * @retval true  コマンドリスト作成成功.
 * @retval false コマンドリスト作成失敗.
 */
-bool Renderer::Draw(const std::vector<Sprite>& spriteList, const Cell* cellList, const PSO& pso, const Resource::Texture& texture, RenderingInfo& info)
+bool Renderer::Draw(const std::vector<Sprite>& spriteList, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
 {
 	if (spriteList.empty()) {
 		return true;
 	}
-	return Draw(&*spriteList.begin(), (&*spriteList.begin()) + spriteList.size(), cellList, pso, texture, info);
+	return Draw(&*spriteList.begin(), (&*spriteList.begin()) + spriteList.size(), cellList, bundleId, info);
 }
 
-bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const PSO& pso, const Resource::Texture& texture, RenderingInfo& info)
+bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
 {
+	if (!bundleId || static_cast<size_t>(*bundleId) >= bundleList.size() || !bundleList[*bundleId]) {
+		return false;
+	}
 	if (currentFrameIndex < 0) {
 		return false;
 	}
@@ -244,16 +310,11 @@ bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellLis
 	}
 
 	FrameResource& fr = frameResourceList[currentFrameIndex];
-
-	commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
-	commandList->SetPipelineState(pso.pso.Get());
 	ID3D12DescriptorHeap* heapList[] = { info.texDescHeap };
 	commandList->SetDescriptorHeaps(_countof(heapList), heapList);
-	commandList->SetGraphicsRootDescriptorTable(0, texture.handle);
+	commandList->ExecuteBundle(bundleList[*bundleId].Get());
 	commandList->SetGraphicsRoot32BitConstants(1, 16, &info.matViewProjection, 0);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &fr.vertexBufferView);
-	commandList->IASetIndexBuffer(&indexBufferView);
 	commandList->OMSetRenderTargets(1, &info.rtvHandle, FALSE, &info.dsvHandle);
 	commandList->RSSetViewports(1, &info.viewport);
 	commandList->RSSetScissorRects(1, &info.scissorRect);
@@ -288,6 +349,9 @@ bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellLis
 */
 bool Renderer::End()
 {
+	if (currentFrameIndex < 0) {
+		return false;
+	}
 	currentFrameIndex = -1;
 	if (FAILED(commandList->Close())) {
 		return false;

@@ -63,6 +63,8 @@ bool PauseScene::Load(::Scene::Context&)
 		}
 	}
 
+	bundleId = graphics.spriteRenderer.CreateBundle(GetPSO(PSOType_Sprite), graphics.csuDescriptorHeap.Get(), texFont);
+
 	time = 0.0f;
 
 	return true;
@@ -111,5 +113,5 @@ void PauseScene::Draw(Graphics::Graphics& graphics) const
 	spriteRenderingInfo.texDescHeap = graphics.csuDescriptorHeap.Get();
 	spriteRenderingInfo.matViewProjection = graphics.matViewProjection;
 
-	graphics.spriteRenderer.Draw(sprFont, cellFile->Get(0)->list.data(), GetPSO(PSOType_Sprite), texFont, spriteRenderingInfo);
+	graphics.spriteRenderer.Draw(sprFont, cellFile->Get(0)->list.data(), bundleId, spriteRenderingInfo);
 }

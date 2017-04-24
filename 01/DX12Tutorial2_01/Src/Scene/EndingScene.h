@@ -32,6 +32,7 @@ private:
 	Sprite::FilePtr cellFile;
 	AnimationFile animationFile;
 	double time;
+	Sprite::BundleId bundleId[3];
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_ENDINGSCENE_H_

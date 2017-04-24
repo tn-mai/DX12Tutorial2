@@ -41,6 +41,7 @@ private:
 	double time;
 	bool started;
 	Audio::SoundPtr seStart;
+	Sprite::BundleId bundleId[3];
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_TITLESCENE_H_

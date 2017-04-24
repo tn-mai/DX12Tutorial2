@@ -28,6 +28,7 @@ private:
 	Sprite::FilePtr cellFile;
 	AnimationFile animationFile;
 	double time;
+	Sprite::BundleId bundleId;
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_PAUSESCENE_H_
