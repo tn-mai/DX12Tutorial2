@@ -156,7 +156,11 @@ AnimationFile LoadAnimationFromJsonFile(const wchar_t* filename)
 	if (!ReadFile(h, &buffer[0], buffer.size(), &readBytes, nullptr)) {
 		return {};
 	}
-	const Json::Value json = Json::Parse(buffer.data());
+	const Json::Result result = Json::Parse(buffer.data(), buffer.data() + buffer.size());
+	if (!result.error.empty()) {
+		return {};
+	}
+	const Json::Value& json = result.value;
 	if (json.type != Json::Type::Array) {
 		return {};
 	}

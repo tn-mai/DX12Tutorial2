@@ -16,6 +16,8 @@ enum class Type
 {
 	String, ///< 文字列型.
 	Number, ///< 数値型.
+	Boolean, ///< 真偽値.
+	Null, ///< null値.
 	Object, ///< オブジェクト型.
 	Array, ///< 配列型.
 };
@@ -23,6 +25,7 @@ enum class Type
 struct Value;
 typedef std::string String;
 typedef double Number;
+typedef bool Boolean;
 typedef std::map<std::string, Value> Object;
 typedef std::vector<Value> Array;
 
@@ -39,6 +42,7 @@ struct Value
 	Value(const Value& v);
 	Value(const std::string& s);
 	Value(double d);
+	Value(bool b);
 	Value(const Object& o);
 	Value(const Array& a);
 
@@ -58,12 +62,19 @@ struct Value
 	union {
 		String string;
 		Number number;
+		Boolean boolean;
 		Object object;
 		Array array;
 	};
 };
 
-Value Parse(const char* data);
+struct Result
+{
+	Value value;
+	std::string error;
+};
+
+Result Parse(const char* data, const char* end);
 
 } // namespace Json
 
