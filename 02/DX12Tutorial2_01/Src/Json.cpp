@@ -84,28 +84,39 @@ Value::Value(const Object& o) : type(Type::Object) { new(&object) Object(o); }
 */
 Value::Value(const Array& a) : type(Type::Array) { new(&array) Array(a); }
 
-void SkipSpace(const char*& data, const char* end);
-Result ParseString(const char*& data, const char* end);
-Result ParseNumber(const char*& data, const char* end);
-Result ParseBoolean(const char*& data, const char* end);
-Result ParseNull(const char*& data, const char* end);
-Result ParseObject(const char*& data, const char* end);
-Result ParseArray(const char*& data, const char* end);
-Result ParseValue(const char*& data, const char* end);
+struct Context
+{
+	Context(const char* d, const char* e) : data(d), end(e), line(0) {}
+	void AddError(const std::string& err) { error += "(" + std::to_string(line) + "): " + err + "\n"; }
+
+	const char* data;
+	const char* end;
+	int line;
+	std::string error;
+};
+
+void SkipSpace(Context& context);
+Value ParseString(Context& context);
+Value ParseNumber(Context& context);
+Value ParseObject(Context& context);
+Value ParseArray(Context& context);
+Value ParseValue(Context& context);
 
 /**
 * 空白文字をスキップする.
 *
 * @param data JSONデータの解析位置を示すポインタ.
 */
-void SkipSpace(const char*& data, const char* end)
+void SkipSpace(Context& context)
 {
-	for (; data != end; ++data) {
-		switch (*data) {
+	for (; context.data != context.end; ++context.data) {
+		switch (*context.data) {
 		case ' ':
 		case '\t':
 		case '\r':
+			break;
 		case '\n':
+			++context.line;
 			break;
 		default:
 			goto end;
@@ -118,10 +129,10 @@ end:
 /**
 * トークンの終端が正常かどうか調べる.
 */
-bool IsEndOfValidToken(const char* p, const char* end)
+bool IsEndOfValidToken(Context& context)
 {
-	SkipSpace(p, end);
-	return p == end || *p == ',' || *p == '}' || *p == ']';
+	SkipSpace(context);
+	return context.data == context.end || *context.data == ',' || *context.data == '}' || *context.data == ']';
 }
 
 /**
@@ -131,19 +142,20 @@ bool IsEndOfValidToken(const char* p, const char* end)
 *
 * @return 文字列を格納したValue型オブジェクト.
 */
-Result ParseString(const char*& data, const char* end)
+Value ParseString(Context& context)
 {
-	++data; // skip first double quotation.
+	++context.data; // skip first double quotation.
 
 	std::string s;
-	for (; *data != '"'; ++data) {
-		if (data == end) {
-			return { Value(), "予期しないEOF" };
+	for (; *context.data != '"'; ++context.data) {
+		if (context.data == context.end) {
+			context.AddError("文字列の終端に'\"'がありません");
+			return Value();
 		}
-		s.push_back(static_cast<char>(*data));
+		s.push_back(static_cast<char>(*context.data));
 	}
-	++data; // skip last double quotation.
-	return { Value(s) };
+	++context.data; // skip last double quotation.
+	return Value(s);
 }
 
 /**
@@ -153,15 +165,17 @@ Result ParseString(const char*& data, const char* end)
 *
 * @return 数値を格納したValue型オブジェクト.
 */
-Result ParseNumber(const char*& data, const char* end)
+Value ParseNumber(Context& context)
 {
 	char* endPtr;
-	const double d = strtod(data, &endPtr);
-	if (IsEndOfValidToken(endPtr, end)) {
-		data = endPtr;
-		return { Value(d) };
+	const double d = strtod(context.data, &endPtr);
+	if (IsEndOfValidToken(context)) {
+		context.data = endPtr;
+		return Value(d);
 	}
-	return { Value(), "解析不能なトークン" };
+	context.AddError(std::string("解析不能な文字列: ") + std::string(context.data, const_cast<const char*>(endPtr)));
+	context.data = endPtr;
+	return Value();
 }
 
 /**
@@ -171,46 +185,41 @@ Result ParseNumber(const char*& data, const char* end)
 *
 * @return JSONオブジェクトを格納したValue型オブジェクト.
 */
-Result ParseObject(const char*& data, const char* end)
+Value ParseObject(Context& context)
 {
-	++data; // skip first brace.
-	SkipSpace(data, end);
-	if (*data == '}') {
-		++data;
-		return { Value(Object()) };
+	++context.data; // skip first brace.
+	SkipSpace(context);
+	if (*context.data == '}') {
+		++context.data;
+		return Value(Object());
 	}
 
 	Object obj;
 	for (;;) {
-		const Result result = ParseString(data, end);
-		if (!result.error.empty()) {
-			return result;
+		const Value key = ParseString(context);
+		SkipSpace(context);
+		if (*context.data != ':') {
+			context.AddError(std::string("','が必要です: ") + *context.data);
+			return Value();
 		}
-		const std::string key = result.value.string;
-		SkipSpace(data, end);
-		if (*data != ':') {
-			return { Value(), std::string("不正なトークン: ") + *data };
-		}
-		++data; // skip colon.
-		SkipSpace(data, end);
-		const Result value = ParseValue(data, end);
-		if (!value.error.empty()) {
-			return value;
-		}
-		obj.insert(std::make_pair(key, value.value));
+		++context.data; // skip colon.
+		SkipSpace(context);
+		const Value value = ParseValue(context);
+		obj.insert(std::make_pair(key.string, value));
 
-		SkipSpace(data, end);
-		if (*data == '}') {
-			++data; // skip last brace.
+		SkipSpace(context);
+		if (*context.data == '}') {
+			++context.data; // skip last brace.
 			break;
 		}
-		if (*data != ',') {
-			return { Value(), std::string("不正なトークン: ") + *data };
+		if (*context.data != ',') {
+			context.AddError(std::string("','が必要です: ") + *context.data);
+			return Value();
 		}
-		++data; // skip comma.
-		SkipSpace(data, end);
+		++context.data; // skip comma.
+		SkipSpace(context);
 	}
-	return { Value(obj) };
+	return Value(obj);
 }
 
 /**
@@ -220,32 +229,30 @@ Result ParseObject(const char*& data, const char* end)
 *
 * @return JSON配列を格納したValue型オブジェクト.
 */
-Result ParseArray(const char*& data, const char* end)
+Value ParseArray(Context& context)
 {
-	++data; // skip first bracket.
-	SkipSpace(data, end);
-	if (*data == ']') {
-		++data;
+	++context.data; // skip first bracket.
+	SkipSpace(context);
+	if (*context.data == ']') {
+		++context.data;
 		return { Value(Array()) };
 	}
 
 	Array arr;
 	for (;;) {
-		const Result result = ParseValue(data, end);
-		if (!result.error.empty()) {
-			return result;
-		}
-		arr.push_back(result.value);
-		SkipSpace(data, end);
-		if (*data == ']') {
-			++data; // skip last bracket.
+		const Value value = ParseValue(context);
+		arr.push_back(value);
+		SkipSpace(context);
+		if (*context.data == ']') {
+			++context.data; // skip last bracket.
 			break;
 		}
-		if (*data != ',') {
-			return { Value(), std::string("予期しないトークン: ") + *data };
+		if (*context.data != ',') {
+			context.AddError(std::string("','が必要です: ") + *context.data);
+			return { Value() };
 		}
-		++data; // skip comma.
-		SkipSpace(data, end);
+		++context.data; // skip comma.
+		SkipSpace(context);
 	}
 	return { Value(arr) };
 }
@@ -257,43 +264,43 @@ Result ParseArray(const char*& data, const char* end)
 *
 * @return 入力文字に対応するJSONオブジェクトを格納したValue型オブジェクト.
 */
-Result ParseValue(const char*& data, const char* end)
+Value ParseValue(Context& context)
 {
-	SkipSpace(data, end);
-	if (*data == '{') {
-		return ParseObject(data, end);
+	SkipSpace(context);
+	if (*context.data == '{') {
+		return ParseObject(context);
 	}
-	if (*data == '[') {
-		return ParseArray(data, end);
+	if (*context.data == '[') {
+		return ParseArray(context);
 	}
-	if (*data == '"') {
-		return ParseString(data, end);
+	if (*context.data == '"') {
+		return ParseString(context);
 	}
-	if (strcmp(data, "true") == 0) {
-		const char* tmp = data + 4;
-		SkipSpace(tmp, end);
-		if (tmp == end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			data = tmp;
+	if (strcmp(context.data, "true") == 0) {
+		const char* tmp = context.data + 4;
+		SkipSpace(context);
+		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
+			context.data = tmp;
 			return { Value(true) };
 		}
 	}
-	if (strcmp(data, "false") == 0) {
-		const char* tmp = data + 5;
-		SkipSpace(tmp, end);
-		if (tmp == end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			data = tmp;
+	if (strcmp(context.data, "false") == 0) {
+		const char* tmp = context.data + 5;
+		SkipSpace(context);
+		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
+			context.data = tmp;
 			return { Value(false) };
 		}
 	}
-	if (strcmp(data, "null") == 0) {
-		const char* tmp = data + 4;
-		SkipSpace(tmp, end);
-		if (tmp == end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			data = tmp;
+	if (strcmp(context.data, "null") == 0) {
+		const char* tmp = context.data + 4;
+		SkipSpace(context);
+		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
+			context.data = tmp;
 			return { Value() };
 		}
 	}
-	return ParseNumber(data, end);
+	return ParseNumber(context);
 }
 
 /**
@@ -305,7 +312,9 @@ Result ParseValue(const char*& data, const char* end)
 */
 Result Parse(const char* data, const char* end)
 {
-	return ParseValue(data, end);
+	Context context(data, end);
+	Value value = ParseValue(context);
+	return{ value, context.error };
 }
 
 } // namespace Json
