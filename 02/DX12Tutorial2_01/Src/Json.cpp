@@ -84,130 +84,129 @@ Value::~Value() {
 }
 
 /**
-* 解析状態.
+* JSONデータ解析器.
 */
-struct Context
+class Parser
 {
-	/**
-	* コンストラクタ.
-	*
-	* @param d JSONデータの解析開始位置を示すポインタ.
-	* @param e  JSONデータの終端を示すポインタ.
-	*/
-	Context(const char* d, const char* e) : data(d), end(e), line(0) {}
+public:
+	Parser(const char* d, const char* e);
+	void AddError(const std::string& err);
+	void SkipSpace();
+	Value ParseString();
+	Value ParseObject();
+	Value ParseArray();
+	Value ParseValue();
+	Result Parse();
 
-	/**
-	* エラー情報を追加.
-	*
-	* @param err エラーの内容を示す文字列.
-	*
-	* errの先頭に行番号を付与し、エラーバッファに追加する.
-	*/
-	void AddError(const std::string& err) { error += std::to_string(line) + ": " + err + "\n"; }
-
+private:
 	const char* data; ///< 解析中の位置へのポインタ.
 	const char* const end; ///< JSONデータの終端を示すポインタ.
 	int line; ///< 解析中の行数.
 	std::string error; ///< 発生したエラーの情報.
 };
 
-void SkipSpace(Context& context);
-Value ParseString(Context& context);
-Value ParseObject(Context& context);
-Value ParseArray(Context& context);
-Value ParseValue(Context& context);
+/**
+* コンストラクタ.
+*
+* @param d JSONデータの解析開始位置を示すポインタ.
+* @param e  JSONデータの終端を示すポインタ.
+*/
+Parser::Parser(const char* d, const char* e) : data(d), end(e), line(0)
+{
+}
+
+/**
+* エラー情報を追加.
+*
+* @param err エラーの内容を示す文字列.
+*
+* errの先頭に行番号を付与し、エラーバッファに追加する.
+*/
+void Parser::AddError(const std::string& err)
+{
+	error += std::to_string(line) + ": " + err + "\n";
+}
 
 /**
 * 空白文字をスキップする.
-*
-* @param data JSONデータの解析位置を示すポインタ.
 */
-void SkipSpace(Context& context)
+void Parser::SkipSpace()
 {
-	for (; context.data != context.end; ++context.data) {
-		switch (*context.data) {
-		case ' ':
-		case '\t':
-		case '\r':
+	for (; data != end; ++data) {
+		const char c = *data;
+		if (c == ' ' || c == '\t' || c == '\r') {
+			/* EMPTY */
+		} else if (c == '\n') {
+			++line;
+		} else {
 			break;
-		case '\n':
-			++context.line;
-			break;
-		default:
-			goto end;
 		}
 	}
-end:
-	return;
 }
 
 /**
 * 文字列を解析する.
 *
-* @param data JSONデータの解析位置を示すポインタ.
-*
 * @return 文字列を格納したValue型オブジェクト.
 */
-Value ParseString(Context& context)
+Value Parser::ParseString()
 {
-	++context.data; // skip first double quotation.
+	++data; // skip first double quotation.
 
 	std::string s;
-	for (; *context.data != '"'; ++context.data) {
-		if (context.data == context.end) {
-			context.AddError("(ParseString) 文字列の終端に'\"'がありません");
+	for (; *data != '"'; ++data) {
+		if (data == end) {
+			AddError("(ParseString) 文字列の終端に'\"'がありません");
 			return Value();
 		}
-		s.push_back(static_cast<char>(*context.data));
+		s.push_back(static_cast<char>(*data));
 	}
-	++context.data; // skip last double quotation.
+	++data; // skip last double quotation.
 	return Value(s);
 }
 
 /**
 * JSONオブジェクトを解析する.
 *
-* @param data JSONデータの解析位置を示すポインタ.
-*
 * @return JSONオブジェクトを格納したValue型オブジェクト.
 */
-Value ParseObject(Context& context)
+Value Parser::ParseObject()
 {
-	++context.data; // skip first brace.
-	SkipSpace(context);
-	if (*context.data == '}') {
-		++context.data;
+	++data; // skip first brace.
+	SkipSpace();
+	if (*data == '}') {
+		++data;
 		return Value(Object());
 	}
 
 	Object obj;
 	for (;;) {
-		if (*context.data != '"') {
-			context.AddError(std::string("(ParseObject) 文字列でないキーがあります: '") + *context.data + "'");
+		if (*data != '"') {
+			AddError(std::string("(ParseObject) 文字列でないキーがあります: '") + *data + "'");
 			return Value();
 		}
-		const Value key = ParseString(context);
-		SkipSpace(context);
-		if (*context.data != ':') {
-			context.AddError(std::string("(ParseObject) ':'が必要です: '") + *context.data + "'");
+		const Value key = ParseString();
+		SkipSpace();
+		if (*data != ':') {
+			AddError(std::string("(ParseObject) ':'が必要です: '") + *data + "'");
 			return Value();
 		}
-		++context.data; // skip colon.
-		SkipSpace(context);
-		const Value value = ParseValue(context);
+		++data; // skip colon.
+		SkipSpace();
+		const Value value = ParseValue();
 		obj.insert(std::make_pair(key.string, value));
 
-		SkipSpace(context);
-		if (*context.data == '}') {
-			++context.data; // skip last brace.
+		SkipSpace();
+		if (*data == '}') {
+			++data; // skip last brace.
 			break;
 		}
-		if (*context.data != ',') {
-			context.AddError(std::string("(ParseObject) ','が必要です: '") + *context.data + "'");
+		if (*data != ',') {
+			AddError(std::string("(ParseObject) ','が必要です: '") + *data + "'");
 			return Value();
 		}
-		++context.data; // skip comma.
-		SkipSpace(context);
+		++data; // skip comma.
+		SkipSpace();
 	}
 	return Value(obj);
 }
@@ -215,34 +214,32 @@ Value ParseObject(Context& context)
 /**
 * JSON配列を解析する.
 *
-* @param data JSONデータの解析位置を示すポインタ.
-*
 * @return JSON配列を格納したValue型オブジェクト.
 */
-Value ParseArray(Context& context)
+Value Parser::ParseArray()
 {
-	++context.data; // skip first bracket.
-	SkipSpace(context);
-	if (*context.data == ']') {
-		++context.data;
+	++data; // skip first bracket.
+	SkipSpace();
+	if (*data == ']') {
+		++data;
 		return Value(Array());
 	}
 
 	Array arr;
 	for (;;) {
-		const Value value = ParseValue(context);
+		const Value value = ParseValue();
 		arr.push_back(value);
-		SkipSpace(context);
-		if (*context.data == ']') {
-			++context.data; // skip last bracket.
+		SkipSpace();
+		if (*data == ']') {
+			++data; // skip last bracket.
 			break;
 		}
-		if (*context.data != ',') {
-			context.AddError(std::string("(ParseArray) ','が必要です: '") + *context.data + "'");
+		if (*data != ',') {
+			AddError(std::string("(ParseArray) ','が必要です: '") + *data + "'");
 			return Value();
 		}
-		++context.data; // skip comma.
-		SkipSpace(context);
+		++data; // skip comma.
+		SkipSpace();
 	}
 	return Value(arr);
 }
@@ -250,46 +247,56 @@ Value ParseArray(Context& context)
 /**
 * 入力文字に対応するJSONオブジェクトを解析する.
 *
-* @param data JSONデータの解析位置を示すポインタ.
-*
 * @return 入力文字に対応するJSONオブジェクトを格納したValue型オブジェクト.
 */
-Value ParseValue(Context& context)
+Value Parser::ParseValue()
 {
-	SkipSpace(context);
-	if (*context.data == '{') {
-		return ParseObject(context);
+	SkipSpace();
+	if (*data == '{') {
+		return ParseObject();
 	}
-	if (*context.data == '[') {
-		return ParseArray(context);
+	if (*data == '[') {
+		return ParseArray();
 	}
-	if (*context.data == '"') {
-		return ParseString(context);
+	if (*data == '"') {
+		return ParseString();
 	}
-	if (strcmp(context.data, "true") == 0) {
-		context.data += 4;
+	if (strcmp(data, "true") == 0) {
+		data += 4;
 		return Value(true);
 	}
-	if (strcmp(context.data, "false") == 0) {
-		context.data += 5;
+	if (strcmp(data, "false") == 0) {
+		data += 5;
 		return Value(false);
 	}
-	if (strcmp(context.data, "null") == 0) {
-		context.data += 4;
+	if (strcmp(data, "null") == 0) {
+		data += 4;
 		return Value();
 	}
 	{
 		char* endPtr;
-		const double d = strtod(context.data, &endPtr);
-		if (context.data == endPtr) {
-			context.AddError(std::string("(ParseValue) 解析不能な文字があります: '") + *context.data + "'");
+		const double d = strtod(data, &endPtr);
+		if (data == endPtr) {
+			AddError(std::string("(ParseValue) 解析不能な文字があります: '") + *data + "'");
 			return Value();
 		}
-		context.data = endPtr;
+		data = endPtr;
 		return Value(d);
 	}
 }
 
+/**
+* JSONデータを解析する.
+*/
+Result Parser::Parse()
+{
+	Value value = ParseValue();
+	SkipSpace();
+	if (data != end) {
+		AddError(std::string("(Parse) 解析不能な文字があります: '") + *data + "'");
+	}
+	return { value, error };
+}
 /**
 * JSONデータを解析する.
 *
@@ -300,13 +307,8 @@ Value ParseValue(Context& context)
 */
 Result Parse(const char* data, const char* end)
 {
-	Context context(data, end);
-	Value value = ParseValue(context);
-	SkipSpace(context);
-	if (context.data != context.end) {
-		context.AddError(std::string("(Parse) 解析不能な文字があります: '") + *context.data + "'");
-	}
-	return{ value, context.error };
+	Parser parser(data, end);
+	return parser.Parse();
 }
 
 } // namespace Json
