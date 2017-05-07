@@ -205,7 +205,7 @@ Value ParseArray(Context& context)
 	SkipSpace(context);
 	if (*context.data == ']') {
 		++context.data;
-		return { Value(Array()) };
+		return Value(Array());
 	}
 
 	Array arr;
@@ -219,12 +219,12 @@ Value ParseArray(Context& context)
 		}
 		if (*context.data != ',') {
 			context.AddError(std::string("','‚ª•K—v‚Å‚·: ") + *context.data);
-			return { Value() };
+			return Value();
 		}
 		++context.data; // skip comma.
 		SkipSpace(context);
 	}
-	return { Value(arr) };
+	return Value(arr);
 }
 
 /**
