@@ -578,6 +578,7 @@ FilePtr LoadFromJsonFile(const wchar_t* filename)
 	}
 	const Json::Result result = Json::Parse(buffer.data(), buffer.data() + buffer.size());
 	if (!result.error.empty()) {
+		OutputDebugStringA(result.error.c_str());
 		return af;
 	}
 	const Json::Value& json = result.value;
