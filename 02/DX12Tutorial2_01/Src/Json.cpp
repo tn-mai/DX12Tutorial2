@@ -97,7 +97,6 @@ struct Context
 
 void SkipSpace(Context& context);
 Value ParseString(Context& context);
-Value ParseNumber(Context& context);
 Value ParseObject(Context& context);
 Value ParseArray(Context& context);
 Value ParseValue(Context& context);
@@ -127,15 +126,6 @@ end:
 }
 
 /**
-* トークンの終端が正常かどうか調べる.
-*/
-bool IsEndOfValidToken(Context& context)
-{
-	SkipSpace(context);
-	return context.data == context.end || *context.data == ',' || *context.data == '}' || *context.data == ']';
-}
-
-/**
 * 文字列を解析する.
 *
 * @param data JSONデータの解析位置を示すポインタ.
@@ -156,26 +146,6 @@ Value ParseString(Context& context)
 	}
 	++context.data; // skip last double quotation.
 	return Value(s);
-}
-
-/**
-* 数値を解析する.
-*
-* @param data JSONデータの解析位置を示すポインタ.
-*
-* @return 数値を格納したValue型オブジェクト.
-*/
-Value ParseNumber(Context& context)
-{
-	char* endPtr;
-	const double d = strtod(context.data, &endPtr);
-	if (IsEndOfValidToken(context)) {
-		context.data = endPtr;
-		return Value(d);
-	}
-	context.AddError(std::string("解析不能な文字列: ") + std::string(context.data, const_cast<const char*>(endPtr)));
-	context.data = endPtr;
-	return Value();
 }
 
 /**
@@ -277,30 +247,27 @@ Value ParseValue(Context& context)
 		return ParseString(context);
 	}
 	if (strcmp(context.data, "true") == 0) {
-		const char* tmp = context.data + 4;
-		SkipSpace(context);
-		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			context.data = tmp;
-			return { Value(true) };
-		}
+		context.data += 4;
+		return Value(true);
 	}
 	if (strcmp(context.data, "false") == 0) {
-		const char* tmp = context.data + 5;
-		SkipSpace(context);
-		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			context.data = tmp;
-			return { Value(false) };
-		}
+		context.data += 5;
+		return Value(false);
 	}
 	if (strcmp(context.data, "null") == 0) {
-		const char* tmp = context.data + 4;
-		SkipSpace(context);
-		if (tmp == context.end || *tmp == ',' || *tmp == '}' || *tmp == ']') {
-			context.data = tmp;
-			return { Value() };
-		}
+		context.data += 4;
+		return Value();
 	}
-	return ParseNumber(context);
+	{
+		char* endPtr;
+		const double d = strtod(context.data, &endPtr);
+		if (context.data == endPtr) {
+			context.AddError(std::string("解析不能な文字があります: ") + *context.data);
+			return Value();
+		}
+		context.data = endPtr;
+		return Value(d);
+	}
 }
 
 /**
@@ -314,6 +281,10 @@ Result Parse(const char* data, const char* end)
 {
 	Context context(data, end);
 	Value value = ParseValue(context);
+	SkipSpace(context);
+	if (context.data != context.end) {
+		context.AddError(std::string("解析不能な文字があります: ") + *context.data);
+	}
 	return{ value, context.error };
 }
 
