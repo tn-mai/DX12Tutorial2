@@ -87,7 +87,7 @@ Value::Value(const Array& a) : type(Type::Array) { new(&array) Array(a); }
 struct Context
 {
 	Context(const char* d, const char* e) : data(d), end(e), line(0) {}
-	void AddError(const std::string& err) { error += "(" + std::to_string(line) + "): " + err + "\n"; }
+	void AddError(const std::string& err) { error += std::to_string(line) + ": " + err + "\n"; }
 
 	const char* data;
 	const char* end;
@@ -139,7 +139,7 @@ Value ParseString(Context& context)
 	std::string s;
 	for (; *context.data != '"'; ++context.data) {
 		if (context.data == context.end) {
-			context.AddError("文字列の終端に'\"'がありません");
+			context.AddError("(ParseString) 文字列の終端に'\"'がありません");
 			return Value();
 		}
 		s.push_back(static_cast<char>(*context.data));
@@ -166,10 +166,14 @@ Value ParseObject(Context& context)
 
 	Object obj;
 	for (;;) {
+		if (*context.data != '"') {
+			context.AddError(std::string("(ParseObject) 文字列でないキーがあります: '") + *context.data + "'");
+			return Value();
+		}
 		const Value key = ParseString(context);
 		SkipSpace(context);
 		if (*context.data != ':') {
-			context.AddError(std::string("','が必要です: ") + *context.data);
+			context.AddError(std::string("(ParseObject) ':'が必要です: '") + *context.data + "'");
 			return Value();
 		}
 		++context.data; // skip colon.
@@ -183,7 +187,7 @@ Value ParseObject(Context& context)
 			break;
 		}
 		if (*context.data != ',') {
-			context.AddError(std::string("','が必要です: ") + *context.data);
+			context.AddError(std::string("(ParseObject) ','が必要です: '") + *context.data + "'");
 			return Value();
 		}
 		++context.data; // skip comma.
@@ -218,7 +222,7 @@ Value ParseArray(Context& context)
 			break;
 		}
 		if (*context.data != ',') {
-			context.AddError(std::string("','が必要です: ") + *context.data);
+			context.AddError(std::string("(ParseArray) ','が必要です: '") + *context.data + "'");
 			return Value();
 		}
 		++context.data; // skip comma.
@@ -262,7 +266,7 @@ Value ParseValue(Context& context)
 		char* endPtr;
 		const double d = strtod(context.data, &endPtr);
 		if (context.data == endPtr) {
-			context.AddError(std::string("解析不能な文字があります: ") + *context.data);
+			context.AddError(std::string("(ParseValue) 解析不能な文字があります: '") + *context.data + "'");
 			return Value();
 		}
 		context.data = endPtr;
@@ -283,7 +287,7 @@ Result Parse(const char* data, const char* end)
 	Value value = ParseValue(context);
 	SkipSpace(context);
 	if (context.data != context.end) {
-		context.AddError(std::string("解析不能な文字があります: ") + *context.data);
+		context.AddError(std::string("(Parse) 解析不能な文字があります: '") + *context.data + "'");
 	}
 	return{ value, context.error };
 }
