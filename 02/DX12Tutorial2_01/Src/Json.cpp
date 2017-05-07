@@ -6,7 +6,7 @@
 #include "Json.h"
 
 /**
-* JSONパーザ.
+* JSONパーサ.
 */
 namespace Json {
 
@@ -15,39 +15,21 @@ namespace Json {
 *
 * null値として初期化.
 */
-Value::Value() : type(Type::Null) {
-}
+Value::Value() : type(Type::Null) {}
 
 /**
-* デストラクタ.
-*/
-Value::~Value() {
-	switch (type) {
-	case Type::String: string.~basic_string(); break;
-	case Type::Number: break;
-	case Type::Boolean: break;
-	case Type::Null: break;
-	case Type::Object: object.~map(); break;
-	case Type::Array: array.~vector(); break;
-	}
-}
-
-/**
-* コピーコンストラクタ.
+* オブジェクト型としてコンストラクトする.
 *
-* @param v コピー元オブジェクト.
+* @param o オブジェクト.
 */
-Value::Value(const Value& v) {
-	type = v.type;
-	switch (type) {
-	case Type::String: new(&string) String(v.string); break;
-	case Type::Number: new(&number) Number(v.number); break;
-	case Type::Boolean: new(&boolean) Boolean(v.boolean); break;
-	case Type::Null: break;
-	case Type::Object: new(&object) Object(v.object); break;
-	case Type::Array: new(&array) Array(v.array); break;
-	}
-}
+Value::Value(const Object& o) : type(Type::Object) { new(&object) Object(o); }
+
+/**
+* 配列型としてコンストラクトする.
+*
+* @param a 配列.
+*/
+Value::Value(const Array& a) : type(Type::Array) { new(&array) Array(a); }
 
 /**
 * 文字列型としてコンストラクトする.
@@ -71,28 +53,62 @@ Value::Value(double d) : type(Type::Number) { new(&number) Number(d); }
 Value::Value(bool b) : type(Type::Boolean) { new(&boolean) Boolean(b); }
 
 /**
-* オブジェクト型としてコンストラクトする.
+* コピーコンストラクタ.
 *
-* @param o オブジェクト.
+* @param v コピー元オブジェクト.
 */
-Value::Value(const Object& o) : type(Type::Object) { new(&object) Object(o); }
+Value::Value(const Value& v) {
+	type = v.type;
+	switch (type) {
+	case Type::Object: new(&object) Object(v.object); break;
+	case Type::Array: new(&array) Array(v.array); break;
+	case Type::String: new(&string) String(v.string); break;
+	case Type::Number: new(&number) Number(v.number); break;
+	case Type::Boolean: new(&boolean) Boolean(v.boolean); break;
+	case Type::Null: break;
+	}
+}
 
 /**
-* 配列型としてコンストラクトする.
-*
-* @param a 配列.
+* デストラクタ.
 */
-Value::Value(const Array& a) : type(Type::Array) { new(&array) Array(a); }
+Value::~Value() {
+	switch (type) {
+	case Type::Object: object.~Object(); break;
+	case Type::Array: array.~Array(); break;
+	case Type::String: string.~String(); break;
+	case Type::Number: number.~Number();  break;
+	case Type::Boolean: boolean.~Boolean();  break;
+	case Type::Null: break;
+	}
+}
 
+/**
+* 解析状態.
+*/
 struct Context
 {
+	/**
+	* コンストラクタ.
+	*
+	* @param d JSONデータの解析開始位置を示すポインタ.
+	* @param e  JSONデータの終端を示すポインタ.
+	*/
 	Context(const char* d, const char* e) : data(d), end(e), line(0) {}
+
+	/**
+	* エラー情報を追加.
+	*
+	* @param err エラーの内容を示す文字列.
+	*
+	* errの先頭に行番号を付与し、エラーバッファに追加する.
+	*/
 	void AddError(const std::string& err) { error += std::to_string(line) + ": " + err + "\n"; }
 
-	const char* data;
-	const char* end;
-	int line;
-	std::string error;
+	const char* data; ///< 解析中の位置へのポインタ.
+	const char* const end; ///< JSONデータの終端を示すポインタ.
+	int line; ///< 解析中の行数.
+	std::string error; ///< 発生したエラーの情報.
 };
 
 void SkipSpace(Context& context);
@@ -278,6 +294,7 @@ Value ParseValue(Context& context)
 * JSONデータを解析する.
 *
 * @param data JSONデータの解析開始位置を示すポインタ.
+* @param end  JSONデータの終端を示すポインタ.
 *
 * @return 入力文字に対応するJSONオブジェクトを格納したValue型オブジェクト.
 */
