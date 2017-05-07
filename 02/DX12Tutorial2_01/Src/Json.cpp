@@ -4,6 +4,8 @@
 * JSONデータを解析するパーサ.
 */
 #include "Json.h"
+#include <string.h>
+#include <stdlib.h>
 
 /**
 * JSONパーサ.
@@ -89,30 +91,49 @@ Value::~Value() {
 class Parser
 {
 public:
-	Parser(const char* d, const char* e);
+	Parser() = default;
+	~Parser() = default;
+	Parser(const Parser&) = delete;
+	Parser& operator=(const Parser&) = delete;
+
+	Result Parse(const char* d, const char* e);
+
+private:
 	void AddError(const std::string& err);
 	void SkipSpace();
+	Value ParseValue();
 	Value ParseString();
 	Value ParseObject();
 	Value ParseArray();
-	Value ParseValue();
-	Result Parse();
 
 private:
 	const char* data; ///< 解析中の位置へのポインタ.
-	const char* const end; ///< JSONデータの終端を示すポインタ.
+	const char* end; ///< JSONデータの終端を示すポインタ.
 	int line; ///< 解析中の行数.
 	std::string error; ///< 発生したエラーの情報.
 };
 
 /**
-* コンストラクタ.
+* JSONデータを解析する.
 *
 * @param d JSONデータの解析開始位置を示すポインタ.
-* @param e  JSONデータの終端を示すポインタ.
+* @param e JSONデータの終端を示すポインタ.
+*
+* @return Result型の解析結果オブジェクト.
 */
-Parser::Parser(const char* d, const char* e) : data(d), end(e), line(0)
+Result Parser::Parse(const char* d, const char* e)
 {
+	data = d;
+	end = e;
+	line = 0;
+	error.clear();
+
+	Value value = ParseValue();
+	SkipSpace();
+	if (data != end) {
+		AddError(std::string("(Parse) 解析不能な文字があります: '") + *data + "'");
+	}
+	return { value, error };
 }
 
 /**
@@ -141,6 +162,41 @@ void Parser::SkipSpace()
 		} else {
 			break;
 		}
+	}
+}
+
+/**
+* 値を解析する.
+*
+* @return 値を格納したValue型オブジェクト.
+*/
+Value Parser::ParseValue()
+{
+	SkipSpace();
+	if (*data == '{') {
+		return ParseObject();
+	} else if (*data == '[') {
+		return ParseArray();
+	} else if (*data == '"') {
+		return ParseString();
+	} else if (strcmp(data, "true") == 0) {
+		data += 4;
+		return Value(true);
+	} else if (strcmp(data, "false") == 0) {
+		data += 5;
+		return Value(false);
+	} else if (strcmp(data, "null") == 0) {
+		data += 4;
+		return Value();
+	} else {
+		char* endPtr;
+		const double d = strtod(data, &endPtr);
+		if (data == endPtr) {
+			AddError(std::string("(ParseValue) 解析不能な文字があります: '") + *data + "'");
+			return Value();
+		}
+		data = endPtr;
+		return Value(d);
 	}
 }
 
@@ -245,70 +301,17 @@ Value Parser::ParseArray()
 }
 
 /**
-* 入力文字に対応するJSONオブジェクトを解析する.
-*
-* @return 入力文字に対応するJSONオブジェクトを格納したValue型オブジェクト.
-*/
-Value Parser::ParseValue()
-{
-	SkipSpace();
-	if (*data == '{') {
-		return ParseObject();
-	}
-	if (*data == '[') {
-		return ParseArray();
-	}
-	if (*data == '"') {
-		return ParseString();
-	}
-	if (strcmp(data, "true") == 0) {
-		data += 4;
-		return Value(true);
-	}
-	if (strcmp(data, "false") == 0) {
-		data += 5;
-		return Value(false);
-	}
-	if (strcmp(data, "null") == 0) {
-		data += 4;
-		return Value();
-	}
-	{
-		char* endPtr;
-		const double d = strtod(data, &endPtr);
-		if (data == endPtr) {
-			AddError(std::string("(ParseValue) 解析不能な文字があります: '") + *data + "'");
-			return Value();
-		}
-		data = endPtr;
-		return Value(d);
-	}
-}
-
-/**
-* JSONデータを解析する.
-*/
-Result Parser::Parse()
-{
-	Value value = ParseValue();
-	SkipSpace();
-	if (data != end) {
-		AddError(std::string("(Parse) 解析不能な文字があります: '") + *data + "'");
-	}
-	return { value, error };
-}
-/**
 * JSONデータを解析する.
 *
 * @param data JSONデータの解析開始位置を示すポインタ.
 * @param end  JSONデータの終端を示すポインタ.
 *
-* @return 入力文字に対応するJSONオブジェクトを格納したValue型オブジェクト.
+* @return Result型の解析結果オブジェクト.
 */
 Result Parse(const char* data, const char* end)
 {
-	Parser parser(data, end);
-	return parser.Parse();
+	Parser parser;
+	return parser.Parse(data, end);
 }
 
 } // namespace Json
