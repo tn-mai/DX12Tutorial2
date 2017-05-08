@@ -5,7 +5,7 @@
 #define DX12TUTORIAL_SRC_JSON_H_
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace Json {
 
@@ -13,7 +13,7 @@ class Value;
 typedef std::string String;
 typedef double Number;
 typedef bool Boolean;
-typedef std::map<std::string, Value> Object;
+typedef std::unordered_map<String, Value> Object;
 typedef std::vector<Value> Array;
 
 /**
@@ -37,6 +37,7 @@ enum class Type
 */
 class Value
 {
+	friend class Parser;
 public:
 	Value();
 	Value(const Object& o);
@@ -59,7 +60,14 @@ public:
 		return *this;
 	}
 
-public:
+	Type GetType() const;
+	const String& AsString() const;
+	Number AsNumber() const;
+	Boolean AsBoolean() const;
+	const Object& AsObject() const;
+	const Array& AsArray() const;
+
+private:
 	Type type;
 	union {
 		String string;

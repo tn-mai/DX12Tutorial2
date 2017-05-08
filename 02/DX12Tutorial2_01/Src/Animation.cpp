@@ -161,55 +161,52 @@ AnimationFile LoadAnimationFromJsonFile(const wchar_t* filename)
 		OutputDebugStringA(result.error.c_str());
 		return {};
 	}
-	const Json::Value& json = result.value;
-	if (json.type != Json::Type::Array) {
-		return {};
-	}
 	AnimationFile af;
-	for (const Json::Value& e : json.array) {
-		if (e.type != Json::Type::Object) {
-			break;
-		}
-		const Json::Object::const_iterator itrName = e.object.find("name");
-		if (itrName == e.object.end() || itrName->second.type != Json::Type::String) {
-			break;
-		}
+	const Json::Array& json = result.value.AsArray();
+	for (const Json::Value& e : json) {
+		const Json::Object& object = e.AsObject();
 		AnimationList al;
-		al.name = itrName->second.string;
-		const Json::Object::const_iterator itrList = e.object.find("list");
-		if (itrList == e.object.end() || itrList->second.type != Json::Type::Array) {
+		const Json::Object::const_iterator itrName = object.find("name");
+		if (itrName != object.end()) {
+			al.name = itrName->second.AsString();
+		}
+		const Json::Object::const_iterator itrList = object.find("list");
+		if (itrList == object.end()) {
 			break;
 		}
-		for (const Json::Value& seq : itrList->second.array) {
-			if (seq.type != Json::Type::Array) {
-				return af;
-			}
+		for (const Json::Value& seq : itrList->second.AsArray()) {
 			AnimationSequence as;
-			for (const Json::Value& data : seq.array) {
-				if (data.type != Json::Type::Object) {
-					return af;
-				}
+			for (const Json::Value& data : seq.AsArray()) {
+				const Json::Object& obj = data.AsObject();
 				AnimationData ad;
-				ad.cellIndex = static_cast<uint32_t>(data.object.find("cell")->second.number);
-				ad.time = static_cast<float>(data.object.find("time")->second.number);
-				ad.rotation = static_cast<float>(data.object.find("rotation")->second.number);
+				ad.cellIndex = static_cast<uint32_t>(obj.find("cell")->second.AsNumber());
+				ad.time = static_cast<float>(obj.find("time")->second.AsNumber());
+				ad.rotation = static_cast<float>(obj.find("rotation")->second.AsNumber());
 				{
-					auto itr = data.object.find("scale");
-					if (itr == data.object.end() || itr->second.type != Json::Type::Array || itr->second.array.size() < 2) {
+					auto itr = obj.find("scale");
+					if (itr == obj.end()) {
 						return af;
 					}
-					ad.scale.x = static_cast<float>(itr->second.array[0].number);
-					ad.scale.y = static_cast<float>(itr->second.array[1].number);
+					const Json::Array& scale = itr->second.AsArray();
+					if (scale.size() < 2) {
+						return af;
+					}
+					ad.scale.x = static_cast<float>(scale[0].AsNumber());
+					ad.scale.y = static_cast<float>(scale[1].AsNumber());
 				}
 				{
-					auto itr = data.object.find("color");
-					if (itr == data.object.end() || itr->second.type != Json::Type::Array || itr->second.array.size() < 4) {
+					auto itr = obj.find("color");
+					if (itr == obj.end()) {
 						return af;
 					}
-					ad.color.x = static_cast<float>(itr->second.array[0].number);
-					ad.color.y = static_cast<float>(itr->second.array[1].number);
-					ad.color.z = static_cast<float>(itr->second.array[2].number);
-					ad.color.w = static_cast<float>(itr->second.array[3].number);
+					const Json::Array& color = itr->second.AsArray();
+					if (color.size() < 4) {
+						return af;
+					}
+					ad.color.x = static_cast<float>(color[0].AsNumber());
+					ad.color.y = static_cast<float>(color[1].AsNumber());
+					ad.color.z = static_cast<float>(color[2].AsNumber());
+					ad.color.w = static_cast<float>(color[3].AsNumber());
 				}
 				as.push_back(ad);
 			}

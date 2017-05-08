@@ -86,6 +86,69 @@ Value::~Value() {
 }
 
 /**
+* データ型を取得する.
+*
+* @return データの種類.
+*/
+Type Value::GetType() const
+{
+	return type;
+}
+
+/**
+* 文字列としてアクセス.
+*
+* @return 文字列データ.
+*/
+const String& Value::AsString() const
+{
+	static const String dummy;
+	return type == Type::String ? string : dummy;
+}
+
+/**
+* 数値としてアクセス.
+*
+* @return 数値データ.
+*/
+Number Value::AsNumber() const
+{
+	return type == Type::Number ? number : 0;
+}
+
+/**
+* 真偽値としてアクセス.
+*
+* @return 真偽値データ.
+*/
+Boolean Value::AsBoolean() const
+{
+	return type == Type::Boolean ? boolean : false;
+}
+
+/**
+* オブジェクトとしてアクセス.
+*
+* @return オブジェクトデータ.
+*/
+const Object& Value::AsObject() const
+{
+	static const Object dummy;
+	return type == Type::Object ? object : dummy;
+}
+
+/**
+* 配列としてアクセス.
+*
+* @return 配列データ.
+*/
+const Array& Value::AsArray() const
+{
+	static const Array dummy;
+	return type == Type::Array ? array : dummy;
+}
+
+/**
 * JSONデータ解析器.
 */
 class Parser
@@ -173,7 +236,10 @@ void Parser::SkipSpace()
 Value Parser::ParseValue()
 {
 	SkipSpace();
-	if (*data == '{') {
+	if (data == end) {
+		AddError("(ParseValue) 解析中にデータ終端に到達しました");
+		return Value();
+	} else if (*data == '{') {
 		return ParseObject();
 	} else if (*data == '[') {
 		return ParseArray();
@@ -210,14 +276,17 @@ Value Parser::ParseString()
 	++data; // skip first double quotation.
 
 	std::string s;
-	for (; *data != '"'; ++data) {
+	for (;;) {
 		if (data == end) {
 			AddError("(ParseString) 文字列の終端に'\"'がありません");
 			return Value();
+		} else if (*data == '"') {
+			++data; // skip last double quotation.
+			break;
 		}
 		s.push_back(static_cast<char>(*data));
+		++data;
 	}
-	++data; // skip last double quotation.
 	return Value(s);
 }
 
@@ -230,7 +299,10 @@ Value Parser::ParseObject()
 {
 	++data; // skip first brace.
 	SkipSpace();
-	if (*data == '}') {
+	if (data == end) {
+		AddError("(ParseObject) オブジェクトの終端に'}'がありません");
+		return Value();
+	} else if (*data == '}') {
 		++data;
 		return Value(Object());
 	}
@@ -242,22 +314,29 @@ Value Parser::ParseObject()
 			return Value();
 		}
 		const Value key = ParseString();
+
 		SkipSpace();
-		if (*data != ':') {
+		if (data == end) {
+			AddError("(ParseObject) ':'が必要です");
+			return Value();
+		} else if (*data != ':') {
 			AddError(std::string("(ParseObject) ':'が必要です: '") + *data + "'");
 			return Value();
 		}
 		++data; // skip colon.
+		
 		SkipSpace();
 		const Value value = ParseValue();
 		obj.insert(std::make_pair(key.string, value));
 
 		SkipSpace();
-		if (*data == '}') {
+		if (data == end) {
+			AddError("(ParseObject) オブジェクトの終端に'}'がありません");
+			return Value();
+		} else if (*data == '}') {
 			++data; // skip last brace.
 			break;
-		}
-		if (*data != ',') {
+		} else if (*data != ',') {
 			AddError(std::string("(ParseObject) ','が必要です: '") + *data + "'");
 			return Value();
 		}
@@ -276,7 +355,10 @@ Value Parser::ParseArray()
 {
 	++data; // skip first bracket.
 	SkipSpace();
-	if (*data == ']') {
+	if (data == end) {
+		AddError("(ParseArray) 配列の終端に']'がありません");
+		return Value();
+	} else if (*data == ']') {
 		++data;
 		return Value(Array());
 	}
@@ -286,11 +368,13 @@ Value Parser::ParseArray()
 		const Value value = ParseValue();
 		arr.push_back(value);
 		SkipSpace();
-		if (*data == ']') {
+		if (data == end) {
+			AddError("(ParseArray) 配列の終端に']'がありません");
+			return Value();
+		} else if (*data == ']') {
 			++data; // skip last bracket.
 			break;
-		}
-		if (*data != ',') {
+		} else if (*data != ',') {
 			AddError(std::string("(ParseArray) ','が必要です: '") + *data + "'");
 			return Value();
 		}

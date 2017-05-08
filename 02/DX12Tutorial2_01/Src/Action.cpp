@@ -581,34 +581,25 @@ FilePtr LoadFromJsonFile(const wchar_t* filename)
 		OutputDebugStringA(result.error.c_str());
 		return af;
 	}
-	const Json::Value& json = result.value;
-	if (json.type != Json::Type::Array) {
-		return af;
-	}
-
-	for (const Json::Value& e : json.array) {
-		if (e.type != Json::Type::Object) {
-			break;
-		}
-		const Json::Object::const_iterator itrName = e.object.find("name");
-		if (itrName == e.object.end() || itrName->second.type != Json::Type::String) {
-			break;
-		}
+	const Json::Array& json = result.value.AsArray();
+	for (const Json::Value& e : json) {
+		const Json::Object& object = e.AsObject();
 		List al;
-		al.name = itrName->second.string;
-		const Json::Object::const_iterator itrList = e.object.find("list");
-		if (itrList == e.object.end() || itrList->second.type != Json::Type::Array) {
+
+		const Json::Object::const_iterator itrName = object.find("name");
+		if (itrName != object.end()) {
+			al.name = itrName->second.AsString();
+		}
+		const Json::Object::const_iterator itrList = object.find("list");
+		if (itrList == object.end()) {
 			break;
 		}
-		for (const Json::Value& seq : itrList->second.array) {
-			if (seq.type != Json::Type::Array) {
-				return af;
-			}
+		const Json::Array& seqList = itrList->second.AsArray();
+		for (const Json::Value& valSeq : seqList) {
+			const Json::Array& seq = valSeq.AsArray();
 			Sequence as;
-			for (const Json::Value& data : seq.array) {
-				if (data.type != Json::Type::Object) {
-					return af;
-				}
+			for (const Json::Value& data : seq) {
+				const Json::Object& obj = data.AsObject();
 				Data ad = {};
 				static const struct {
 					const char* const str;
@@ -622,14 +613,14 @@ FilePtr LoadFromJsonFile(const wchar_t* filename)
 					{ "Animation", Type::Animation },
 					{ "Delete", Type::Vanishing },
 				};
-				const auto itrTypePair = std::find(typeMap, typeMap + _countof(typeMap), data.object.find("type")->second.string);
+				const auto itrTypePair = std::find(typeMap, typeMap + _countof(typeMap), obj.find("type")->second.AsString());
 				if (itrTypePair == typeMap + _countof(typeMap)) {
 					return af;
 				}
 				ad.type = itrTypePair->type;
-				const Json::Array& array = data.object.find("args")->second.array;
+				const Json::Array& array = obj.find("args")->second.AsArray();
 				for (size_t i = 0; i < 3 && i < array.size(); ++i) {
-					ad.param[i] = static_cast<float>(array[i].number);
+					ad.param[i] = static_cast<float>(array[i].AsNumber());
 				}
 				as.push_back(ad);
 			}

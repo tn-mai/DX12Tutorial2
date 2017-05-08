@@ -441,7 +441,7 @@ FilePtr LoadFromJsonFile(const wchar_t* filename)
 	std::vector<char> buffer;
 	buffer.resize(static_cast<size_t>(size.QuadPart));
 	DWORD readBytes;
-	if (!ReadFile(h, &buffer[0], buffer.size(), &readBytes, nullptr)) {
+	if (!ReadFile(h, buffer.data(), buffer.size(), &readBytes, nullptr)) {
 		return af;
 	}
 	const Json::Result result = Json::Parse(buffer.data(), buffer.data() + buffer.size());
@@ -449,46 +449,42 @@ FilePtr LoadFromJsonFile(const wchar_t* filename)
 		OutputDebugStringA(result.error.c_str());
 		return af;
 	}
-	const Json::Value& json = result.value;
-	if (json.type != Json::Type::Array) {
-		return af;
-	}
+	const Json::Array& json = result.value.AsArray();
 
-	for (const Json::Value& e : json.array) {
-		if (e.type != Json::Type::Object) {
-			break;
-		}
-		const Json::Object::const_iterator itrName = e.object.find("name");
-		if (itrName == e.object.end() || itrName->second.type != Json::Type::String) {
-			break;
-		}
-		const Json::Object::const_iterator itrTexSize = e.object.find("texsize");
-		if (itrTexSize == e.object.end() || itrTexSize->second.type != Json::Type::Array || itrTexSize->second.array.size() < 2) {
-			break;
-		}
-		const XMVECTOR texsize = XMVectorReciprocal({ static_cast<float>(itrTexSize->second.array[0].number), static_cast<float>(itrTexSize->second.array[1].number) });
+	for (const Json::Value& e : json) {
+		const Json::Object& object = e.AsObject();
 		CellList al;
-		al.name = itrName->second.string;
-		const Json::Object::const_iterator itrList = e.object.find("list");
-		if (itrList == e.object.end() || itrList->second.type != Json::Type::Array) {
+		const Json::Object::const_iterator itrName = object.find("name");
+		if (itrName != object.end()) {
+			al.name = itrName->second.AsString();
+		}
+		const Json::Object::const_iterator itrTexSize = object.find("texsize");
+		if (itrTexSize == object.end()) {
 			break;
 		}
-		for (const Json::Value& data : itrList->second.array) {
-			if (data.type != Json::Type::Object) {
-				return af;
-			}
+		const Json::Array& ts = itrTexSize->second.AsArray();
+		if (ts.size() < 2) {
+			break;
+		}
+		const XMVECTOR texsize = XMVectorReciprocal({ static_cast<float>(ts[0].AsNumber()), static_cast<float>(ts[1].AsNumber()) });
+		const Json::Object::const_iterator itrList = object.find("list");
+		if (itrList == object.end()) {
+			break;
+		}
+		for (const Json::Value& data : itrList->second.AsArray()) {
+			const Json::Object& obj = data.AsObject();
 			Cell cell;
-			const Json::Array& uv = data.object.find("uv")->second.array;
-			cell.uv.x = uv.size() > 0 ? static_cast<float>(uv[0].number) : 0.0f;
-			cell.uv.y = uv.size() > 1 ? static_cast<float>(uv[1].number) : 0.0f;
+			const Json::Array& uv = obj.find("uv")->second.AsArray();
+			cell.uv.x = uv.size() > 0 ? static_cast<float>(uv[0].AsNumber()) : 0.0f;
+			cell.uv.y = uv.size() > 1 ? static_cast<float>(uv[1].AsNumber()) : 0.0f;
 			XMStoreFloat2(&cell.uv, XMVectorMultiply(XMLoadFloat2(&cell.uv), texsize));
-			const Json::Array& tsize = data.object.find("tsize")->second.array;
-			cell.tsize.x = tsize.size() > 0 ? static_cast<float>(tsize[0].number) : 0.0f;
-			cell.tsize.y = tsize.size() > 1 ? static_cast<float>(tsize[1].number) : 0.0f;
+			const Json::Array& tsize = obj.find("tsize")->second.AsArray();
+			cell.tsize.x = tsize.size() > 0 ? static_cast<float>(tsize[0].AsNumber()) : 0.0f;
+			cell.tsize.y = tsize.size() > 1 ? static_cast<float>(tsize[1].AsNumber()) : 0.0f;
 			XMStoreFloat2(&cell.tsize, XMVectorMultiply(XMLoadFloat2(&cell.tsize), texsize));
-			const Json::Array& ssize = data.object.find("ssize")->second.array;
-			cell.ssize.x = ssize.size() > 0 ? static_cast<float>(ssize[0].number) : 0.0f;
-			cell.ssize.y = ssize.size() > 1 ? static_cast<float>(ssize[1].number) : 0.0f;
+			const Json::Array& ssize = obj.find("ssize")->second.AsArray();
+			cell.ssize.x = ssize.size() > 0 ? static_cast<float>(ssize[0].AsNumber()) : 0.0f;
+			cell.ssize.y = ssize.size() > 1 ? static_cast<float>(ssize[1].AsNumber()) : 0.0f;
 			al.list.push_back(cell);
 		}
 		af->clList.push_back(al);
