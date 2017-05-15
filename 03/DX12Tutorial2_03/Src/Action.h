@@ -6,6 +6,7 @@
 #include <DirectXMath.h>
 #include <stdint.h>
 #include <vector>
+#include <string>
 #include <memory>
 #include <functional>
 
@@ -17,6 +18,69 @@ struct Sprite;
 * スプライトの座標を制御するための、アクションと呼ばれる機能に関する名前空間.
 */
 namespace Action {
+
+namespace B {
+
+/**
+* 行動の種類.
+*/
+enum class Type : uint32_t
+{
+	Move,
+	Stop,
+	Bezier,
+};
+
+/**
+* 移動データ型.
+*/
+union Code
+{
+	Code() {}
+	explicit Code(Type t) : opcode(t) {}
+	explicit Code(float f) : operand(f) {}
+	Code(const Code&) = default;
+	~Code() = default;
+	Code& operator=(const Code&) = default;
+
+	Type opcode;
+	float operand;
+};
+
+/**
+* 移動パターン.
+*/
+struct Pattern {
+	std::string name; ///< 移動パターン名.
+	std::vector<Code> data; ///< 移動データ配列.
+};
+
+/// 移動パターンリスト.
+typedef std::vector<Pattern> PatternList;
+
+/**
+* 移動制御クラス.
+*/
+class Controller
+{
+public:
+	Controller();
+	Controller(const Controller&) = default;
+	~Controller() = default;
+	Controller& operator=(const Controller&) = default;
+
+	void SetPattern(const Pattern* p);
+	void Update(Sprite::Sprite& sprite, double delta);
+
+private:
+	const Pattern* pattern;
+	size_t codeCounter;
+	DirectX::XMVECTOR basePos;
+	DirectX::XMVECTOR startPos;
+	double time;
+};
+
+} // namespace B
 
 struct List;
 enum class Type;

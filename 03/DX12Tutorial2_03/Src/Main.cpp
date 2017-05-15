@@ -144,6 +144,45 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		return 0;
 	}
 
+	{
+		using namespace Action::B;
+		PatternList ptnList;
+		ptnList.resize(2);
+		ptnList[0].name = "MoveTest";
+		ptnList[0].data.push_back(Code(Type::Move));
+		ptnList[0].data.push_back(Code(-100));
+		ptnList[0].data.push_back(Code(100));
+		ptnList[0].data.push_back(Code(100));
+		ptnList[0].data.push_back(Code(Type::Stop));
+		ptnList[0].data.push_back(Code(1));
+		ptnList[0].data.push_back(Code(Type::Move));
+		ptnList[0].data.push_back(Code(100));
+		ptnList[0].data.push_back(Code(100));
+		ptnList[0].data.push_back(Code(200));
+		ptnList[1].name = "BezierTest";
+		ptnList[1].data.push_back(Code(Type::Bezier));
+		ptnList[1].data.push_back(Code(-400));
+		ptnList[1].data.push_back(Code(600));
+		ptnList[1].data.push_back(Code(400));
+		ptnList[1].data.push_back(Code(600));
+		ptnList[1].data.push_back(Code(0));
+		ptnList[1].data.push_back(Code(0));
+		ptnList[1].data.push_back(Code(2));
+
+		AnimationList anmList;
+		Sprite::Sprite spr(anmList, XMFLOAT3(400, 100, 0.1));
+		Controller actController;
+		actController.SetPattern(&ptnList[1]);
+		float totalTime = 0;
+		for (int i = 0; i < 100; ++i) {
+			char buf[256];
+			snprintf(buf, 256, "%f(%f, %f)\n", totalTime, spr.pos.x, spr.pos.y);
+			OutputDebugStringA(buf);
+			actController.Update(spr, 0.125);
+			totalTime += 0.125f;
+		}
+	}
+
 	Timer timer;
 	for (;;) {
 		MSG msg = {};

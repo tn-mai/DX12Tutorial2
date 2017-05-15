@@ -7,16 +7,127 @@
 *
 */
 #include "Action.h"
-#include "Sprite.h"
 #include "Json.h"
-#include <vector>
-#include <string>
-#include <set>
+#include "Sprite.h"
 #include <algorithm>
 
 using namespace DirectX;
 
 namespace Action {
+
+namespace B {
+
+/**
+* tにおける3次ベジェ曲線の座標を計算する.
+*
+* @param b0 制御点0の座標.
+* @param b1 制御点1の座標.
+* @param b2 制御点2の座標.
+* @param b3 制御点3の座標.
+* @param t  曲線上の位置.
+*
+* @return tに対応する座標.
+*/
+XMVECTOR XM_CALLCONV CalcBezier(XMVECTOR b0, XMVECTOR b1, XMVECTOR b2, XMVECTOR b3, float t)
+{
+	const float u = 1.0f - t;
+	const XMVECTOR coef = XMVectorSet(u * u * u, 3.0f * u * u * t, 3.0f * u * t * t, t * t * t);
+	XMVECTOR p = XMVectorMultiply(b0, XMVectorSplatX(coef));
+	p = XMVectorMultiplyAdd(b1, XMVectorSplatY(coef), p);
+	p = XMVectorMultiplyAdd(b2, XMVectorSplatZ(coef), p);
+	p = XMVectorMultiplyAdd(b3, XMVectorSplatW(coef), p);
+	return p;
+#if 0
+	return omt * omt * omt * b0 +
+		3.0f * omt * omt * t * b1 +
+		3.0f * omt * t * t * b2 +
+		t * t * t * b3;
+#endif
+}
+
+/**
+* コンストラクタ.
+*/
+Controller::Controller() : pattern(nullptr)
+{
+}
+
+/**
+* 移動パターンを指定する.
+*
+* @param p      設定する移動パターンへのポインタ.
+*/
+void Controller::SetPattern(const Pattern* p)
+{
+	pattern = p;
+	codeCounter = 0;
+	time = 0;
+}
+
+/**
+* 状態の更新.
+*
+* @param sprite 移動パターンを適用するスプライト.
+* @param delta  前回更新してからの経過時間.
+*/
+void Controller::Update(Sprite::Sprite& sprite, double delta)
+{
+	if (!pattern || codeCounter >= pattern->data.size()) {
+		return;
+	}
+	if (codeCounter == 0 && time == 0) {
+		basePos = XMLoadFloat3(&sprite.pos);
+		startPos = XMLoadFloat3(&sprite.pos);
+	}
+	time += delta;
+	const Code* pCode = pattern->data.data() + codeCounter;
+	switch (pCode[0].opcode) {
+	case Type::Move: {
+		const XMVECTOR relativeTargetPos = XMVectorSet(pCode[1].operand, pCode[2].operand, 0, 0);
+		const float speed = pCode[3].operand;
+		const XMVECTOR targetPos = XMVectorAdd(relativeTargetPos, basePos);
+		const XMVECTOR targetVec = XMVectorSubtract(targetPos, startPos);
+		const XMVECTOR unitVec = XMVector2Normalize(targetVec);
+		const float currentLength = speed * static_cast<float>(time);
+		const XMVECTOR currentVec = XMVectorMultiply(unitVec, XMVectorReplicate(currentLength));
+		const uint32_t isOverRun = XMVectorGetIntX(XMVectorGreaterOrEqual(XMVector2LengthSq(currentVec), XMVector2LengthSq(targetVec)));
+		if (!isOverRun) {
+			XMStoreFloat3(&sprite.pos, XMVectorAdd(startPos, currentVec));
+		} else {
+			XMStoreFloat3(&sprite.pos, targetPos);
+			startPos = targetPos;
+			codeCounter += 4;
+			time = 0;
+		}
+		break;
+	}
+	case Type::Stop:
+		if (time >= pCode[1].operand) {
+			codeCounter += 2;
+			time -= pCode[1].operand;
+		}
+		break;
+	case Type::Bezier:
+	{
+		const XMVECTOR pos1 = XMVectorAdd(XMVectorSet(pCode[1].operand, pCode[2].operand, 0, 0), basePos);
+		const XMVECTOR pos2 = XMVectorAdd(XMVectorSet(pCode[3].operand, pCode[4].operand, 0, 0), basePos);
+		const XMVECTOR pos3 = XMVectorAdd(XMVectorSet(pCode[5].operand, pCode[6].operand, 0, 0), basePos);
+		const float totalTime = pCode[7].operand;
+		if (time < totalTime) {
+			const XMVECTOR p = CalcBezier(startPos, pos1, pos2, pos3, time / totalTime);
+			XMStoreFloat3(&sprite.pos, p);
+		} else {
+			XMStoreFloat3(&sprite.pos, pos3);
+			startPos = pos3;
+			codeCounter += 8;
+			time = 0;
+		}
+		break;
+	}
+	}
+}
+
+} // namespcee B
 
 /**
 * アクションデータの種類.
