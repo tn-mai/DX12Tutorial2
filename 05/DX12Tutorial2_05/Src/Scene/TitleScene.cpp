@@ -6,6 +6,7 @@
 #include "../PSO.h"
 #include "../GamePad.h"
 #include <DirectXMath.h>
+#include "../Collision.h"
 
 using namespace DirectX;
 
@@ -132,6 +133,9 @@ bool TitleScene::Load(::Scene::Context&)
 		sprBezier.back().SetSeqIndex('0' - ' ');
 		sprBezier.push_back(Sprite::Sprite(animationFile[1], {400, 0, 0.7f}, 0, { 1, 1 }, {1, 1, 1, 1}));
 		sprBezier.back().SetSeqIndex('0' - ' ');
+
+		sprBezier.push_back(Sprite::Sprite(animationFile[1], {500, 300, 0.7f}, 0, { 1, 1 }, {1, 1, 1, 1}));
+		sprBezier.back().SetSeqIndex('0' - ' ');
 	}
 
 	return true;
@@ -175,6 +179,41 @@ int TitleScene::Update(::Scene::Context&, double delta)
 		if (actController[i].IsFinished()) {
 			actController[i].Restart();
 		}
+	}
+
+	// 衝突判定サンプルコード.
+	{
+		using namespace Collision;
+		static XMFLOAT2A speed(3, 4);
+		const Shape a = Shape::MakeRectangle(XMFLOAT2(-16, -16), XMFLOAT2(16, 16));
+		const Shape wallTop = Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(800, 0));
+		const Shape wallBottom = Shape::MakeLine(XMFLOAT2(0, 600), XMFLOAT2(800, 600));
+		const Shape wallLeft = Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(0, 600));
+		const Shape wallRight = Shape::MakeLine(XMFLOAT2(800, 0), XMFLOAT2(800, 600));
+		const Shape planet = Shape::MakeCircle(200);
+		const XMFLOAT2A planetPos(270, 320);
+
+		XMFLOAT3& pos = sprBezier.back().pos;
+		XMVECTOR v = XMLoadFloat2A(&speed) * XMVectorReplicate(static_cast<float>(delta));
+		XMFLOAT2A newPos;
+		XMStoreFloat2A(&newPos, XMLoadFloat3(&pos) + v);
+		if (IsCollision(a, newPos, planet, planetPos)) {
+			const XMVECTOR normal = XMVector2Normalize(XMLoadFloat2A(&newPos) - XMLoadFloat2A(&planetPos));
+			XMStoreFloat2A(&speed, XMVector2Reflect(XMLoadFloat2A(&speed), normal));
+		} else {
+			if (IsCollision(a, newPos, wallTop, XMFLOAT2(0, 0))) {
+				speed.y *= -1;
+			} else if (IsCollision(a, newPos, wallBottom, XMFLOAT2(0, 0))) {
+				speed.y *= -1;
+			}
+			if (IsCollision(a, newPos, wallLeft, XMFLOAT2(0, 0))) {
+				speed.x *= -1;
+			} else if (IsCollision(a, newPos, wallRight, XMFLOAT2(0, 0))) {
+				speed.x *= -1;
+			}
+		}
+		pos.x += speed.x;
+		pos.y += speed.y;
 	}
 
 	if (started) {

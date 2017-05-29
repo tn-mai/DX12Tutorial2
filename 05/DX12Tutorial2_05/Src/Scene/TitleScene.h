@@ -44,7 +44,7 @@ private:
 	Sprite::BundleId bundleId[3];
 
 	Action::B::PatternList ptnList;
-	Action::B::Controller actController[3];
+	Action::B::Controller actController[4];
 	std::vector<Sprite::Sprite> sprBezier;
 };
 
