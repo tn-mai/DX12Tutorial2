@@ -122,7 +122,7 @@ bool Detector::LineCircle(const Shape& sa, const XMFLOAT2& pa, const Shape& sb, 
 	const XMVECTOR bo = o - b;
 
 	// ‰~‚Ì’†S‚©‚ç’¼ü‚Ü‚Å‚Ì‹——£‚ª‰~‚Ì”¼ŒaˆÈã‚È‚çÕ“Ë‚µ‚Ä‚¢‚È‚¢.
-	if (XMVectorGetX(XMVector2Cross(v, ao)) > sb.circle.radius) {
+	if (XMVectorGetX(XMVectorAbs(XMVector2Cross(v, ao))) > sb.circle.radius) {
 		return false;
 	}
 
