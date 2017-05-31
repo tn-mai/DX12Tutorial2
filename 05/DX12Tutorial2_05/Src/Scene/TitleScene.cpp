@@ -184,7 +184,7 @@ int TitleScene::Update(::Scene::Context&, double delta)
 	// 衝突判定サンプルコード.
 	{
 		using namespace Collision;
-		static XMFLOAT2A speed(3, 4);
+		static XMFLOAT2A speed(180, 240);
 		const Shape a = Shape::MakeRectangle(XMFLOAT2(-16, -16), XMFLOAT2(16, 16));
 		const Shape wallTop = Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(800, 0));
 		const Shape wallBottom = Shape::MakeLine(XMFLOAT2(0, 600), XMFLOAT2(800, 600));
@@ -198,7 +198,7 @@ int TitleScene::Update(::Scene::Context&, double delta)
 		XMFLOAT2A newPos;
 		XMStoreFloat2A(&newPos, XMLoadFloat3(&pos) + v);
 		if (IsCollision(a, newPos, planet, planetPos)) {
-			const XMVECTOR normal = XMVector2Normalize(XMLoadFloat2A(&newPos) - XMLoadFloat2A(&planetPos));
+			const XMVECTOR normal = XMVector2Normalize(XMLoadFloat3(&pos) - XMLoadFloat2A(&planetPos));
 			XMStoreFloat2A(&speed, XMVector2Reflect(XMLoadFloat2A(&speed), normal));
 		} else {
 			if (IsCollision(a, newPos, wallTop, XMFLOAT2(0, 0))) {
@@ -212,8 +212,8 @@ int TitleScene::Update(::Scene::Context&, double delta)
 				speed.x *= -1;
 			}
 		}
-		pos.x += speed.x;
-		pos.y += speed.y;
+		pos.x += speed.x * static_cast<float>(delta);
+		pos.y += speed.y * static_cast<float>(delta);
 	}
 
 	if (started) {
