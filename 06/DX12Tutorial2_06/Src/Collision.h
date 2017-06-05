@@ -31,6 +31,23 @@ class Shape
 	friend bool IsCollision(const Shape&, const DirectX::XMFLOAT2&, const Shape&, const DirectX::XMFLOAT2&);
 
 public:
+	struct Circle
+	{
+		float radius;
+	};
+
+	struct Rect
+	{
+		DirectX::XMFLOAT2 leftTop;
+		DirectX::XMFLOAT2 rightBottom;
+	};
+
+	struct Line
+	{
+		DirectX::XMFLOAT2 start;
+		DirectX::XMFLOAT2 end;
+	};
+
 	static Shape MakeCircle(float r);
 	static Shape MakeRectangle(const DirectX::XMFLOAT2& lt, const DirectX::XMFLOAT2& rb);
 	static Shape MakeLine(const DirectX::XMFLOAT2& s,const DirectX::XMFLOAT2& e);
@@ -39,25 +56,30 @@ public:
 	Shape& operator=(const Shape& src);
 	~Shape() = default;
 
+	DirectX::XMVECTOR Aabb(float x, float y) const;
+
+	ShapeType Type() const { return type; }
+	const Circle& AsCircle() const {
+		static const Circle dummy = {};
+		return type == ShapeType::Circle ? circle : dummy;
+	}
+	const Rect& AsRect() const {
+		static const Rect dummy = {};
+		return type == ShapeType::Rectangle ? rect : dummy;
+	}
+	const Line& AsLine() const {
+		static const Line dummy = {};
+		return type == ShapeType::Line ? line : dummy;
+	}
+
 private:
 	Shape() = default;
 
 	ShapeType type;
 	union {
-		struct Circle
-		{
-			float radius;
-		} circle;
-		struct Rect
-		{
-			DirectX::XMFLOAT2 leftTop;
-			DirectX::XMFLOAT2 rightBottom;
-		} rect;
-		struct Line
-		{
-			DirectX::XMFLOAT2 start;
-			DirectX::XMFLOAT2 end;
-		} line;
+		Circle circle;
+		Rect rect;
+		Line line;
 	};
 };
 

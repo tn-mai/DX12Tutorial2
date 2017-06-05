@@ -9,6 +9,8 @@
 #include "../Animation.h"
 #include "../Audio.h"
 
+#include "../SpatialGrid.h"
+
 class TitleScene : public Scene::Scene
 {
 public:
@@ -33,19 +35,24 @@ private:
 	Resource::Texture texBackground;
 	Resource::Texture texLogo;
 	Resource::Texture texFont;
+	Resource::Texture texObjects;
 	std::vector<Sprite::Sprite> sprBackground;
 	std::vector<Sprite::Sprite> sprLogo;
 	std::vector<Sprite::Sprite> sprFont;
 	Sprite::FilePtr cellFile;
+	Sprite::FilePtr cellObjects;
 	AnimationFile animationFile;
+	AnimationFile anmObjects;
 	double time;
 	bool started;
 	Audio::SoundPtr seStart;
-	Sprite::BundleId bundleId[3];
+	Sprite::BundleId bundleId[4];
 
 	Action::B::PatternList ptnList;
 	Action::B::Controller actController[4];
 	std::vector<Sprite::Sprite> sprBezier;
+
+	SpatialGrid::World world;
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_TITLESCENE_H_

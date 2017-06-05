@@ -147,6 +147,8 @@ public:
 	void SetManualMove(const DirectX::XMFLOAT2& m) { move = m; }
 	void SetManualAccel(float degree, float accel);
 	void SetTime(float time);
+	const DirectX::XMFLOAT2& GetMove() const { return move; }
+	const DirectX::XMFLOAT2& GetAccel() const { return accel; }
 	float GetCurrentTime() const { return currentTime; }
 	float GetTotalTime() const { return totalTime; }
 	uint32_t GetSeqIndex() const { return seqIndex; }

@@ -7,8 +7,8 @@
 #include "../GamePad.h"
 #include <DirectXMath.h>
 #include "../Collision.h"
-
-class Object {};
+#include <random>
+#include <time.h>
 
 using namespace DirectX;
 
@@ -32,10 +32,82 @@ const Sprite::Cell cellList[] = {
 }
 
 /**
+* 円同士の衝突ハンドラ.
+*
+* @param a  衝突したエンティティの片方.
+* @param b  衝突したエンティティのもう片方.
+*/
+void CollisionHandler(SpatialGrid::Entity& a, SpatialGrid::Entity& b)
+{
+	const XMVECTOR ab = XMLoadFloat3(&b.pos) - XMLoadFloat3(&a.pos);
+	const XMVECTOR va = XMLoadFloat2(&a.actController.GetMove());
+	const XMVECTOR vb = XMLoadFloat2(&b.actController.GetMove());
+
+	// 互いに遠ざかるように動いていたらベクトルはそのまま.
+	if (XMVectorGetX(XMVector2Dot(ab, va - vb)) <= 0) {
+		return;
+	}
+
+	// 角度に応じて運動エネルギーを交換する.
+	const XMVECTOR normal = XMVector2Normalize(ab);
+	const XMVECTOR halfNormal = ab * XMVectorReplicate(0.5f);
+	const XMVECTOR a1 = XMVectorSplatX(XMVector2Dot(normal, va));
+	const XMVECTOR a2 = XMVectorSplatX(XMVector2Dot(normal, vb));
+	const XMVECTOR newVa = va + normal * (a2 - a1);
+	const XMVECTOR newVb = vb + normal * (a1 - a2);
+	XMFLOAT2A ma, mb;
+	XMStoreFloat2A(&ma, newVa);
+	XMStoreFloat2A(&mb, newVb);
+	a.actController.SetManualMove(ma);
+	b.actController.SetManualMove(mb);
+#if 1
+	a.SetSeqIndex(4);
+	a.SetGroupId(2);
+	b.SetSeqIndex(4);
+	b.SetGroupId(2);
+#endif
+}
+
+void BombHandler(SpatialGrid::Entity& a, SpatialGrid::Entity& b)
+{
+	if (a.GroupId() == 2) {
+		b.SetSeqIndex(4);
+		b.SetGroupId(2);
+	} else {
+		a.SetSeqIndex(4);
+		a.SetGroupId(2);
+	}
+}
+
+/**
+* 円と線分の衝突ハンドラ.
+*
+* @param a  衝突したエンティティの片方.
+* @param b  衝突したエンティティのもう片方.
+*/
+void WallCollisionHandler(SpatialGrid::Entity& a, SpatialGrid::Entity& b)
+{
+	SpatialGrid::Entity* pA = &a;
+	SpatialGrid::Entity* pB = &b;
+	if (a.GroupId() == 1) {
+		std::swap(pA, pB);
+	}
+	const Collision::Shape::Line line = pB->Shape().AsLine();
+	const XMVECTOR normal = XMVectorSwizzle<1, 0, 2, 3>(XMVector2Normalize(XMLoadFloat2(&line.start) - XMLoadFloat2(&line.end)));
+	XMFLOAT2 move = pA->actController.GetMove();
+	XMStoreFloat2(&move, XMVector2Reflect(XMLoadFloat2(&move), normal));
+	a.actController.SetManualMove(move);
+}
+
+/**
 * コンストラクタ.
 */
 TitleScene::TitleScene() : Scene(L"Title")
 {
+	world.SetWorldSize({ 800, 600 }, { 16, 12 }, 1024);
+	world.RegisterHandler(0, 0, CollisionHandler);
+	world.RegisterHandler(0, 1, WallCollisionHandler);
+	world.RegisterHandler(0, 2, BombHandler);
 }
 
 /**
@@ -55,11 +127,17 @@ bool TitleScene::Load(::Scene::Context&)
 	if (!graphics.texMap.LoadFromFile(texFont, L"Res/TextFont.png")) {
 		return false;
 	}
+	if (!graphics.texMap.LoadFromFile(texObjects, L"Res/Objects.png")) {
+		return false;
+ 	}
 	ID3D12CommandList* ppCommandLists[] = { graphics.texMap.End() };
 	graphics.commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	cellFile = Sprite::LoadFromJsonFile(L"Res/Cell/CellFont.json");
+	cellObjects = Sprite::LoadFromJsonFile(L"Res/Cell/CellEnemy.json");
+
 	animationFile = LoadAnimationFromJsonFile(L"Res/Anm/AnmTitle.json");
+	anmObjects = LoadAnimationFromJsonFile(L"Res/Anm/Animation.json");
 
 	graphics.WaitForGpu();
 	graphics.texMap.ResetLoader();
@@ -90,6 +168,7 @@ bool TitleScene::Load(::Scene::Context&)
 	bundleId[0] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texBackground);
 	bundleId[1] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texLogo);
 	bundleId[2] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texFont);
+	bundleId[3] = graphics.spriteRenderer.CreateBundle(pso, texDescHeap, texObjects);
 
 	{
 		using namespace Action::B;
@@ -138,6 +217,26 @@ bool TitleScene::Load(::Scene::Context&)
 
 		sprBezier.push_back(Sprite::Sprite(animationFile[1], {500, 300, 0.7f}, 0, { 1, 1 }, {1, 1, 1, 1}));
 		sprBezier.back().SetSeqIndex('0' - ' ');
+
+		time_t tm;
+		std::mt19937 random(::time(&tm));
+		std::uniform_real<float> gen;
+		const XMVECTOR baseMove = XMVectorSet(200, 0, 0, 0);
+		for (int i = 0; i < 101; ++i) {
+			const float x = gen(random) * (800 - 24 * 2) + 24;
+			const float y = gen(random) * (600 - 24 * 2) + 24;
+			SpatialGrid::Entity* p = world.AddEntity(0, anmObjects[0], { x, y, 0.5f }, Collision::Shape::MakeCircle(16));
+			p->SetSeqIndex(3);
+			const float r = gen(random) * 3.141592653f * 2.0f;
+			const XMMATRIX m = XMMatrixRotationZ(r);
+			XMFLOAT2A move;
+			XMStoreFloat2A(&move, XMVector2Transform(baseMove, m));
+			p->actController.SetManualMove(move);
+		}
+		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(800, 0)));
+		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(0, 600), XMFLOAT2(800, 600)));
+		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(0, 600)));
+		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(800, 0), XMFLOAT2(800, 600)));
 	}
 
 	return true;
@@ -218,6 +317,17 @@ int TitleScene::Update(::Scene::Context&, double delta)
 		pos.y += speed.y;
 	}
 
+	{
+		world.Update(1.0f / 60.0f);
+		auto end = world.End();
+		for (auto itr = world.Begin(); itr != end; ++itr) {
+			if (itr->animeController.IsFinished()) {
+				itr->RequestRemove();
+			}
+		}
+		world.RemoveEntity();
+	}
+
 	if (started) {
 		if (seStart->GetState() & Audio::State_Stopped) {
 			return ExitCode_MainGame;
@@ -265,4 +375,5 @@ void TitleScene::Draw(Graphics::Graphics& graphics) const
 	graphics.spriteRenderer.Draw(sprLogo, cellList, bundleId[1], spriteRenderingInfo);
 	graphics.spriteRenderer.Draw(sprFont, cellFile->Get(0)->list.data(), bundleId[2], spriteRenderingInfo);
 	graphics.spriteRenderer.Draw(sprBezier, cellFile->Get(0)->list.data(), bundleId[2], spriteRenderingInfo);
+	graphics.spriteRenderer.Draw(world.Begin(), world.End(), cellObjects->Get(0)->list.data(), bundleId[3], spriteRenderingInfo);
 }

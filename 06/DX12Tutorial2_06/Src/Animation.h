@@ -48,6 +48,13 @@ class AnimationController
 public:
 	AnimationController() = delete;
 	explicit AnimationController(const AnimationList& list);
+	AnimationController(const AnimationController&) = default;
+	AnimationController& operator=(const AnimationController& src) {
+		this->~AnimationController();
+		new(this) AnimationController(src);
+		return *this;
+	}
+
 	void SetSeqIndex(uint32_t no);
 	void Update(double delta);
 	const AnimationData& GetData() const;

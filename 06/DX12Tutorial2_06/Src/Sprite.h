@@ -1,7 +1,8 @@
 /**
 * @file Sprite.h
 */
-#pragma once
+#ifndef DX12TUTORIAL_SRC_SPRITE_H_
+#define DX12TUTORIAL_SRC_SPRITE_H_
 #include "Animation.h"
 #include "Action.h"
 #include <d3d12.h>
@@ -17,6 +18,8 @@ class ResourceLoader;
 struct PSO;
 
 namespace Sprite {
+
+struct Vertex;
 
 /**
 * セルデータ型.
@@ -87,12 +90,44 @@ public:
 	bool Begin(int frameIndex);
 	bool Draw(const std::vector<Sprite>& spriteList, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
 	bool Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
-	bool Draw(const Sprite** first, const Sprite** last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
 	bool End();
 	ID3D12GraphicsCommandList* GetCommandList();
 
+	template<typename Iterator>
+	bool Draw(Iterator first, Iterator last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
+	{
+		if (!IsValidDrawStatus(bundleId)) {
+			return false;
+		}
+		if (first == last) {
+			return true;
+		}
+		DrawParamters param = SetupDraw(cellList, bundleId, info);
+		for (Iterator sprite = first; sprite != last; ++sprite) {
+			if (!Draw(param, *sprite)) {
+				break;
+			}
+		}
+		TeardownDraw(param);
+		return true;
+	}
+
 private:
 	void DestroyBundle(size_t bundleId);
+	bool IsValidDrawStatus(const BundleId& bundleId);
+
+	/// 描画パラメータ.
+	struct DrawParamters {
+		RenderingInfo& info;
+		const Cell* cellList;
+		DirectX::XMFLOAT2 offset;
+		size_t remainingSprite;
+		size_t numSprite;
+		Vertex* v;
+	};
+	DrawParamters SetupDraw(const Cell* cellList, const BundleId& bundleId, RenderingInfo& info);
+	bool Draw(DrawParamters& param, const Sprite& sprite);
+	void TeardownDraw(const DrawParamters& param);
 
 	size_t maxSpriteCount;
 	int frameBufferCount;
@@ -147,3 +182,5 @@ typedef std::shared_ptr<File> FilePtr;
 FilePtr LoadFromJsonFile(const wchar_t*);
 
 } // namespace Sprite
+
+#endif // DX12TUTORIAL_SRC_SPRITE_H_

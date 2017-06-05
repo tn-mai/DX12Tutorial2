@@ -178,6 +178,7 @@
     <ClCompile Include="Src\Scene\MainGameScene.cpp" />
     <ClCompile Include="Src\Scene\PauseScene.cpp" />
     <ClCompile Include="Src\Scene\TitleScene.cpp" />
+    <ClCompile Include="Src\SpatialGrid.cpp" />
     <ClCompile Include="Src\Sprite.cpp" />
     <ClCompile Include="Src\Texture.cpp" />
     <ClCompile Include="Src\Timer.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="Src\Scene\MainGameScene.h" />
     <ClInclude Include="Src\Scene\PauseScene.h" />
     <ClInclude Include="Src\Scene\TitleScene.h" />
+    <ClInclude Include="Src\SpatialGrid.h" />
     <ClInclude Include="Src\Sprite.h" />
     <ClInclude Include="Src\Texture.h" />
     <ClInclude Include="Src\Timer.h" />

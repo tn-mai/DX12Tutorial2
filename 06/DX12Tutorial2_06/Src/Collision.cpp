@@ -196,7 +196,7 @@ bool Detector::LineRect(const Shape& sa, const XMFLOAT2& pa, const Shape& sb, co
 	}
 	const float distSq = XMVectorGetX(XMVector2LengthSq(p1.v - p0.v));
 	tmax *= tmax;
-	return (tmin >= 0 && tmin <= distSq) || (tmax >= 0 && tmax <= distSq);
+	return tmin <= distSq && tmax >= 0;
 }
 
 /**
@@ -284,6 +284,35 @@ Shape& Shape::operator=(const Shape& src)
 	this->~Shape();
 	new(this) Shape(src);
 	return *this;
+}
+
+/**
+* AABBを計算する.
+*
+* @param x 形状のX座標.
+* @param y 形状のY座標.
+*
+* @return 形状を完全に含むAABB.
+*         AABBはXMVECTORに(x=左 y=上 z=右 w=下)のように格納される.
+*/
+XMVECTOR Shape::Aabb(float x, float y) const
+{
+	const XMVECTOR pos = XMVectorSet(x, y, 0, 0);
+	switch (type) {
+	case ShapeType::Circle: {
+		const XMVECTOR r = XMVectorReplicate(circle.radius);
+		return XMVectorPermute<0, 1, 4, 5>(pos - r, pos - r);
+	}
+	case ShapeType::Rectangle:
+		return XMVectorPermute<0, 1, 4, 5>(pos + XMLoadFloat2(&rect.leftTop), pos + XMLoadFloat2(&rect.rightBottom));
+	case Collision::ShapeType::Line:{
+		const XMVECTOR start = XMLoadFloat2(&line.start);
+		const XMVECTOR end = XMLoadFloat2(&line.end);
+		return XMVectorPermute<0, 1, 4, 5>(pos + XMVectorMin(start, end), pos + XMVectorMax(start, end));
+	}
+	default:
+		return XMVectorZero();
+	}
 }
 
 /**

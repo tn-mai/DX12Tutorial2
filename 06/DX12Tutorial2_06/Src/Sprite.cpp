@@ -13,8 +13,6 @@ using namespace DirectX;
 
 namespace Sprite {
 
-namespace /* unnamed */ {
-
 /**
 * スプライト描画用頂点データ型.
 */
@@ -23,6 +21,8 @@ struct Vertex {
 	XMFLOAT4 color;
 	XMFLOAT2 texcoord;
 };
+
+namespace /* unnamed */ {
 
 XMFLOAT3 RotateZ(XMVECTOR c, float x, float y, float r)
 {
@@ -72,6 +72,15 @@ void AddVertex(const Sprite& sprite, const Cell* cell, const AnimationData& anm,
 
 } // unnamed namedpace
 
+/**
+* コンストラクタ.
+*
+* @param al アニメーションリスト.
+* @param p  スプライトの座標.
+* @param rot 回転(ラジアン).
+* @param s   拡大率.
+* @param col 表示色.
+*/
 Sprite::Sprite(const AnimationList& al, DirectX::XMFLOAT3 p, float rot, DirectX::XMFLOAT2 s, DirectX::XMFLOAT4 col) :
 	animeController(al),
 	actController(),
@@ -297,7 +306,10 @@ bool Renderer::Draw(const std::vector<Sprite>& spriteList, const Cell* cellList,
 	return Draw(&*spriteList.begin(), (&*spriteList.begin()) + spriteList.size(), cellList, bundleId, info);
 }
 
-bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
+/**
+*
+*/
+bool Renderer::IsValidDrawStatus(const BundleId& bundleId)
 {
 	if (!bundleId || static_cast<size_t>(*bundleId) >= bundleList.size() || !bundleList[*bundleId]) {
 		return false;
@@ -305,54 +317,20 @@ bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellLis
 	if (currentFrameIndex < 0) {
 		return false;
 	}
-	if (first == last) {
-		return true;
-	}
-
-	FrameResource& fr = frameResourceList[currentFrameIndex];
-	ID3D12DescriptorHeap* heapList[] = { info.texDescHeap };
-	commandList->SetDescriptorHeaps(_countof(heapList), heapList);
-	commandList->ExecuteBundle(bundleList[*bundleId].Get());
-	commandList->SetGraphicsRoot32BitConstants(1, 16, &info.matViewProjection, 0);
-	commandList->IASetVertexBuffers(0, 1, &fr.vertexBufferView);
-	commandList->OMSetRenderTargets(1, &info.rtvHandle, FALSE, &info.dsvHandle);
-	commandList->RSSetViewports(1, &info.viewport);
-	commandList->RSSetScissorRects(1, &info.scissorRect);
-
-	const XMFLOAT2 offset(-(info.viewport.Width * 0.5f), info.viewport.Height * 0.5f);
-	const int remainingSprite = (fr.vertexBufferView.SizeInBytes / fr.vertexBufferView.StrideInBytes / 4) - spriteCount;
-	int numSprite = 0;
-	Vertex* v = static_cast<Vertex*>(fr.vertexBufferGPUAddress) + (spriteCount * 4);
-	for (const Sprite* sprite = first; sprite != last; ++sprite) {
-		if (sprite->scale.x == 0 || sprite->scale.y == 0) {
-			continue;
-		}
-		const Cell* cell = cellList + sprite->GetCellIndex();
-		AddVertex(*sprite, cell, sprite->animeController.GetData(), v, offset);
-		++numSprite;
-		if (numSprite >= remainingSprite) {
-			break;
-		}
-		v += 4;
-	}
-	commandList->DrawIndexedInstanced(numSprite * 6, 1, 0, spriteCount * 4, 0);
-	spriteCount += numSprite;
-
 	return true;
 }
 
-bool Renderer::Draw(const Sprite** first, const Sprite** last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
+/**
+* スプライト描画ループの設定をする.
+*
+* @param cellList 描画に使用するセルリスト.
+* @param bundleId 描画に使用するバンドルID.
+* @param info     描画情報.
+*
+* @return 描画ループ用パラメータ.
+*/
+Renderer::DrawParamters Renderer::SetupDraw(const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
 {
-	if (!bundleId || static_cast<size_t>(*bundleId) >= bundleList.size() || !bundleList[*bundleId]) {
-		return false;
-	}
-	if (currentFrameIndex < 0) {
-		return false;
-	}
-	if (first == last) {
-		return true;
-	}
-
 	FrameResource& fr = frameResourceList[currentFrameIndex];
 	ID3D12DescriptorHeap* heapList[] = { info.texDescHeap };
 	commandList->SetDescriptorHeaps(_countof(heapList), heapList);
@@ -363,29 +341,69 @@ bool Renderer::Draw(const Sprite** first, const Sprite** last, const Cell* cellL
 	commandList->RSSetViewports(1, &info.viewport);
 	commandList->RSSetScissorRects(1, &info.scissorRect);
 
-	const XMFLOAT2 offset(-(info.viewport.Width * 0.5f), info.viewport.Height * 0.5f);
-	const int remainingSprite = (fr.vertexBufferView.SizeInBytes / fr.vertexBufferView.StrideInBytes / 4) - spriteCount;
-	int numSprite = 0;
-	Vertex* v = static_cast<Vertex*>(fr.vertexBufferGPUAddress) + (spriteCount * 4);
-	for (const Sprite** sprite = first; sprite != last; ++sprite) {
-		if (!sprite) {
-			continue;
-		}
-		const Sprite* p = *sprite;
-		if (p->scale.x == 0 || p->scale.y == 0) {
-			continue;
-		}
-		const Cell* cell = cellList + p->GetCellIndex();
-		AddVertex(*p, cell, p->animeController.GetData(), v, offset);
-		++numSprite;
-		if (numSprite >= remainingSprite) {
+	return DrawParamters{
+		info,
+		cellList,
+		{ -(info.viewport.Width * 0.5f), info.viewport.Height * 0.5f },
+		(fr.vertexBufferView.SizeInBytes / fr.vertexBufferView.StrideInBytes / 4) - spriteCount,
+		0,
+		static_cast<Vertex*>(fr.vertexBufferGPUAddress) + (spriteCount * 4)
+	};
+}
+
+/**
+* スプライトを描画する.
+*
+* @param param 　描画ループ用パラメータ.
+* @param sprite 描画するスプライト.
+*
+* @retval true  描画を継続する.
+* @retval false 描画を終了する.
+*/
+bool Renderer::Draw(DrawParamters& param, const Sprite& sprite)
+{
+	if (sprite.scale.x == 0 || sprite.scale.y == 0) {
+		return true;
+	}
+	const Cell* cell = param.cellList + sprite.GetCellIndex();
+	AddVertex(sprite, cell, sprite.animeController.GetData(), param.v, param.offset);
+	++param.numSprite;
+	if (param.numSprite >= param.remainingSprite) {
+		return false;
+	}
+	param.v += 4;
+	return true;
+}
+
+/**
+* スプライト描画ループを終了する.
+*
+* @param param 描画ループ用パラメータ.
+*/
+void Renderer::TeardownDraw(const DrawParamters& param)
+{
+	commandList->DrawIndexedInstanced(param.numSprite * 6, 1, 0, spriteCount * 4, 0);
+	spriteCount += param.numSprite;
+}
+
+/**
+*
+*/
+bool Renderer::Draw(const Sprite* first, const Sprite* last, const Cell* cellList, const BundleId& bundleId, RenderingInfo& info)
+{
+	if (!IsValidDrawStatus(bundleId)) {
+		return false;
+	}
+	if (first == last) {
+		return true;
+	}
+	DrawParamters param = SetupDraw(cellList, bundleId, info);
+	for (const Sprite* sprite = first; sprite != last; ++sprite) {
+		if (!Draw(param, *sprite)) {
 			break;
 		}
-		v += 4;
 	}
-	commandList->DrawIndexedInstanced(numSprite * 6, 1, 0, spriteCount * 4, 0);
-	spriteCount += numSprite;
-
+	TeardownDraw(param);
 	return true;
 }
 
