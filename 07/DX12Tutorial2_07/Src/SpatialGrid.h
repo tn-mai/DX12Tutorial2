@@ -32,6 +32,7 @@ public:
 	void SetShape(const Collision::Shape& s) { shape = s; }
 	void RequestRemove() { hasRemoveRequest = true; }
 
+	int actId = -1;
 private:
 	uint16_t groupId;
 	bool hasRemoveRequest;

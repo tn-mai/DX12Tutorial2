@@ -10,6 +10,7 @@
 #include "../Audio.h"
 
 #include "../SpatialGrid.h"
+#include "../TimeBasedProducer.h"
 
 class TitleScene : public Scene::Scene
 {
@@ -50,9 +51,13 @@ private:
 
 	Action::B::PatternList ptnList;
 	Action::B::Controller actController[4];
+	std::vector<Action::B::Controller> actForWorld;
+	int lastActId = 0;
+
 	std::vector<Sprite::Sprite> sprBezier;
 
 	SpatialGrid::World world;
+	EventProducer::TimeBasedProducer producer;
 };
 
 #endif // DX12TUTORIAL_SRC_SCENE_TITLESCENE_H_

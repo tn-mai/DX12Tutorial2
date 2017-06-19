@@ -9,6 +9,7 @@
 #include "../Collision.h"
 #include <random>
 #include <time.h>
+#include <algorithm>
 
 using namespace DirectX;
 
@@ -100,6 +101,41 @@ void WallCollisionHandler(SpatialGrid::Entity& a, SpatialGrid::Entity& b)
 }
 
 /**
+* アクション名からIDを取得する.
+*/
+struct ActionIdFromName
+{
+	explicit ActionIdFromName(const Action::B::PatternList& ptnList) : begin(ptnList.begin()), end(ptnList.end()) {}
+	uint32_t operator()(const char* name) const
+	{
+		const auto itr = std::find_if(begin, end, [name](const Action::B::Pattern& p) { return p.name == name; });
+		if (itr == end) {
+			return EventProducer::TimeBasedProducer::unknownName;
+		}
+		return static_cast<uint32_t>(itr - begin);
+	}
+	Action::B::PatternList::const_iterator begin;
+	Action::B::PatternList::const_iterator end;
+};
+
+/**
+* 敵の種類名からIDを取得する.
+*/
+struct EnemyIdFromName
+{
+	uint32_t operator()(const char* name) const
+	{
+		static const char* enemyNameList[] = { "enemy0", "enemy1" };
+		static const char** const end = enemyNameList + _countof(enemyNameList);
+		const auto itr = std::find_if(enemyNameList, end, [name](const char* p) { return strcmp(p, name) == 0; });
+		if (itr == end) {
+			return EventProducer::TimeBasedProducer::unknownName;
+		}
+		return static_cast<uint32_t>(itr - enemyNameList);
+	}
+};
+
+/**
 * コンストラクタ.
 */
 TitleScene::TitleScene() : Scene(L"Title")
@@ -111,7 +147,7 @@ TitleScene::TitleScene() : Scene(L"Title")
 }
 
 /**
-*
+* 読み込み.
 */
 bool TitleScene::Load(::Scene::Context&)
 {
@@ -172,7 +208,7 @@ bool TitleScene::Load(::Scene::Context&)
 
 	{
 		using namespace Action::B;
-		ptnList.resize(2);
+		ptnList.resize(6);
 		ptnList[0].name = "MoveTest";
 		ptnList[0].data.push_back(Code(Type::Move));
 		ptnList[0].data.push_back(Code(-100));
@@ -193,6 +229,94 @@ bool TitleScene::Load(::Scene::Context&)
 		ptnList[1].data.push_back(Code(0));
 		ptnList[1].data.push_back(Code(0));
 		ptnList[1].data.push_back(Code(4));
+
+		ptnList[2].name = "WaveL";
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(-100));
+		ptnList[2].data.push_back(Code(100));
+		ptnList[2].data.push_back(Code(200));
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(-110));
+		ptnList[2].data.push_back(Code(150));
+		ptnList[2].data.push_back(Code(150));
+
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(-100));
+		ptnList[2].data.push_back(Code(200));
+		ptnList[2].data.push_back(Code(175));
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(100));
+		ptnList[2].data.push_back(Code(400));
+		ptnList[2].data.push_back(Code(200));
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(110));
+		ptnList[2].data.push_back(Code(450));
+		ptnList[2].data.push_back(Code(150));
+
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(100));
+		ptnList[2].data.push_back(Code(500));
+		ptnList[2].data.push_back(Code(175));
+		ptnList[2].data.push_back(Code(Type::Move));
+		ptnList[2].data.push_back(Code(-100));
+		ptnList[2].data.push_back(Code(700));
+		ptnList[2].data.push_back(Code(200));
+
+		ptnList[3].name = "WaveR";
+		ptnList[3].data.push_back(Code(Type::Move));
+		ptnList[3].data.push_back(Code(100));
+		ptnList[3].data.push_back(Code(150));
+		ptnList[3].data.push_back(Code(200));
+		ptnList[3].data.push_back(Code(Type::Move));
+		ptnList[3].data.push_back(Code(-100));
+		ptnList[3].data.push_back(Code(300));
+		ptnList[3].data.push_back(Code(200));
+		ptnList[3].data.push_back(Code(Type::Move));
+		ptnList[3].data.push_back(Code(100));
+		ptnList[3].data.push_back(Code(450));
+		ptnList[3].data.push_back(Code(200));
+		ptnList[3].data.push_back(Code(Type::Move));
+		ptnList[3].data.push_back(Code(-100));
+		ptnList[3].data.push_back(Code(600));
+		ptnList[3].data.push_back(Code(200));
+		ptnList[3].data.push_back(Code(Type::Move));
+		ptnList[3].data.push_back(Code(100));
+		ptnList[3].data.push_back(Code(750));
+		ptnList[3].data.push_back(Code(200));
+		ptnList[4].name = "ZigzagL";
+		ptnList[4].data.push_back(Code(Type::Move));
+		ptnList[4].data.push_back(Code(0));
+		ptnList[4].data.push_back(Code(200));
+		ptnList[4].data.push_back(Code(200));
+		ptnList[4].data.push_back(Code(Type::Move));
+		ptnList[4].data.push_back(Code(150));
+		ptnList[4].data.push_back(Code(100));
+		ptnList[4].data.push_back(Code(150));
+		ptnList[4].data.push_back(Code(Type::Move));
+		ptnList[4].data.push_back(Code(150));
+		ptnList[4].data.push_back(Code(500));
+		ptnList[4].data.push_back(Code(200));
+		ptnList[4].data.push_back(Code(Type::Move));
+		ptnList[4].data.push_back(Code(150));
+		ptnList[4].data.push_back(Code(-100));
+		ptnList[4].data.push_back(Code(300));
+		ptnList[5].name = "ZigzagR";
+		ptnList[5].data.push_back(Code(Type::Move));
+		ptnList[5].data.push_back(Code(0));
+		ptnList[5].data.push_back(Code(200));
+		ptnList[5].data.push_back(Code(200));
+		ptnList[5].data.push_back(Code(Type::Move));
+		ptnList[5].data.push_back(Code(-150));
+		ptnList[5].data.push_back(Code(100));
+		ptnList[5].data.push_back(Code(150));
+		ptnList[5].data.push_back(Code(Type::Move));
+		ptnList[5].data.push_back(Code(-150));
+		ptnList[5].data.push_back(Code(500));
+		ptnList[5].data.push_back(Code(200));
+		ptnList[5].data.push_back(Code(Type::Move));
+		ptnList[5].data.push_back(Code(-150));
+		ptnList[5].data.push_back(Code(-100));
+		ptnList[5].data.push_back(Code(300));
 
 		actController[0].SetSeparationCount(10);
 		actController[0].SetSectionCount(16);
@@ -237,6 +361,11 @@ bool TitleScene::Load(::Scene::Context&)
 		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(0, 600), XMFLOAT2(800, 600)));
 		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(0, 0), XMFLOAT2(0, 600)));
 		world.AddEntity(1, anmObjects[0], { 0, 0, 0 }, Collision::Shape::MakeLine(XMFLOAT2(800, 0), XMFLOAT2(800, 600)));
+	}
+
+	actForWorld.resize(1024);
+	if (!producer.LoadScheduleFromJsonFile(L"Res/Level1.sch", ActionIdFromName(ptnList), EnemyIdFromName())) {
+		return false;
 	}
 
 	return true;
@@ -323,9 +452,19 @@ int TitleScene::Update(::Scene::Context&, double delta)
 		for (auto itr = world.Begin(); itr != end; ++itr) {
 			if (itr->animeController.IsFinished()) {
 				itr->RequestRemove();
+			} else if (itr->actId >= 0) {
+				actForWorld[itr->actId].Update(*itr, delta);
 			}
 		}
 		world.RemoveEntity();
+
+		producer.Update(delta,
+			[&](uint32_t type, uint32_t action, const XMFLOAT2& pos) {
+			SpatialGrid::Entity* p = world.AddEntity(3, anmObjects[0], { pos.x, pos.y, 0.5f }, Collision::Shape::MakeCircle(16));
+			p->SetSeqIndex(0);
+			p->actId = lastActId++;
+			actForWorld[p->actId].SetPattern(&ptnList[std::min(action, 5U)]);
+		});
 	}
 
 	if (started) {

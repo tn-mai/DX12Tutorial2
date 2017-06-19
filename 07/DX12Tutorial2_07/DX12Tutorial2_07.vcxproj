@@ -167,6 +167,7 @@
     <ClCompile Include="Src\Animation.cpp" />
     <ClCompile Include="Src\Audio.cpp" />
     <ClCompile Include="Src\Collision.cpp" />
+    <ClCompile Include="Src\File.cpp" />
     <ClCompile Include="Src\GamePad.cpp" />
     <ClCompile Include="Src\Graphics.cpp" />
     <ClCompile Include="Src\Json.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="Src\SpatialGrid.cpp" />
     <ClCompile Include="Src\Sprite.cpp" />
     <ClCompile Include="Src\Texture.cpp" />
+    <ClCompile Include="Src\TimeBasedProducer.cpp" />
     <ClCompile Include="Src\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +192,8 @@
     <ClInclude Include="Src\Collision.h" />
     <ClInclude Include="Src\d3dx12.h" />
     <ClInclude Include="Src\DXMathHelper.h" />
+    <ClInclude Include="Src\EnemyData.h" />
+    <ClInclude Include="Src\File.h" />
     <ClInclude Include="Src\GamePad.h" />
     <ClInclude Include="Src\Graphics.h" />
     <ClInclude Include="Src\Json.h" />
@@ -203,6 +207,7 @@
     <ClInclude Include="Src\SpatialGrid.h" />
     <ClInclude Include="Src\Sprite.h" />
     <ClInclude Include="Src\Texture.h" />
+    <ClInclude Include="Src\TimeBasedProducer.h" />
     <ClInclude Include="Src\Timer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +239,9 @@
     <Image Include="Res\TextFont.png" />
     <Image Include="Res\Title.png" />
     <Image Include="Res\UnknownPlanet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Res\Level1.sch" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
