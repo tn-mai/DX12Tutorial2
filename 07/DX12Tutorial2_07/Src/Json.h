@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <type_traits>
 
 namespace Json {
 
@@ -66,6 +67,13 @@ public:
 	Boolean AsBoolean() const;
 	const Object& AsObject() const;
 	const Array& AsArray() const;
+
+	/// éZèpå^TÇ∆ÇµÇƒÉAÉNÉZÉX.
+	template<typename T>
+	T AsNumber() const {
+		static_assert(std::is_arithmetic<T>::value, "T should be the arithmetic type.");
+		return static_cast<T>(AsNumber());
+	}
 
 private:
 	Type type;
