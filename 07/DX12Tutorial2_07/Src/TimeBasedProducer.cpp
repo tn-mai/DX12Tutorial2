@@ -35,6 +35,9 @@ bool TimeBasedProducer::LoadScheduleFromJsonFile(const wchar_t* filename, NameTo
 		return false;
 	}
 
+    formationList.clear();
+    schedule.clear();
+
 	const std::wstring strError = std::wstring(L"ERROR in ") + filename + L": ";
 	struct Range {
 		size_t begin;
