@@ -49,7 +49,7 @@ private:
 	};
 	typedef std::vector<Event> EventList; ///< イベントリスト型.
 
-	///< 発動中イベント型.
+	/// 発動中イベント型.
 	struct ActiveEvent {
 		double time; ///< イベント発動からの経過時間.
 		FormationList::const_iterator current; ///< これから処理する敵データの位置.
