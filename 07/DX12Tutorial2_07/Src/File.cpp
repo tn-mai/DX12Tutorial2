@@ -2,6 +2,7 @@
 * @file File.cpp
 */
 #include "File.h"
+#include <string>
 #include <Windows.h>
 
 /**
