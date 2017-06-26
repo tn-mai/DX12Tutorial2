@@ -75,6 +75,25 @@ void AddVertex(const Sprite& sprite, const Cell* cell, const AnimationData& anm,
 /**
 * コンストラクタ.
 *
+* @param p  スプライトの座標.
+* @param rot 回転(ラジアン).
+* @param s   拡大率.
+* @param col 表示色.
+*/
+Sprite::Sprite(XMFLOAT3 p, float rot, XMFLOAT2 s, XMFLOAT4 col) :
+	animeController(),
+	actController(),
+	collisionId(-1),
+	pos(p),
+	rotation(rot),
+	scale(s),
+	color(col)
+{
+}
+
+/**
+* コンストラクタ.
+*
 * @param al アニメーションリスト.
 * @param p  スプライトの座標.
 * @param rot 回転(ラジアン).
@@ -82,7 +101,7 @@ void AddVertex(const Sprite& sprite, const Cell* cell, const AnimationData& anm,
 * @param col 表示色.
 */
 Sprite::Sprite(const AnimationList& al, DirectX::XMFLOAT3 p, float rot, DirectX::XMFLOAT2 s, DirectX::XMFLOAT4 col) :
-	animeController(al),
+	animeController(&al),
 	actController(),
 	collisionId(-1),
 	pos(p),
