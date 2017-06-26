@@ -52,6 +52,7 @@ struct Sprite
 
 	AnimationController animeController;
 	Action::Controller actController;
+	Action::B::Controller actControllerB;
 	int32_t hp;
 	int32_t collisionId;
 	DirectX::XMFLOAT3 pos; ///< スクリーン座標上のスプライトの位置.

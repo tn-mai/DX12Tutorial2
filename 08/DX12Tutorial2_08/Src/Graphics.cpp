@@ -269,10 +269,6 @@ bool Graphics::Initialize(HWND hwnd, int clientWidth, int clientHeight)
 	if (!CreateIndexBuffer()) {
 		return false;
 	}
-	if (!LoadTexture()) {
-		return false;
-	}
-	spriteList.push_back(Sprite::Sprite(GetAnimationList(), XMFLOAT3(100, 100, 0.1f), 0, XMFLOAT2(1, 1), XMFLOAT4(1, 1, 1, 1)));
 
 	return true;
 }
@@ -327,7 +323,6 @@ bool Graphics::BeginRendering()
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetDSVHandle();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetRTVHandle();
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	ID3D12DescriptorHeap* heapList[] = { csuDescriptorHeap.Get() };
@@ -468,144 +463,6 @@ bool Graphics::CreateIndexBuffer()
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	indexBufferView.SizeInBytes = sizeof(indices);
 
-	return true;
-}
-
-/**
-* 三角形を描画する.
-*/
-void Graphics::DrawTriangle()
-{
-	const PSO& pso = GetPSO(PSOType_Simple);
-	commandList->SetPipelineState(pso.pso.Get());
-	commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
-	commandList->SetGraphicsRootDescriptorTable(0, texNoise.handle);
-	commandList->SetGraphicsRoot32BitConstants(1, 16, &matViewProjection, 0);
-	commandList->RSSetViewports(1, &viewport);
-	commandList->RSSetScissorRects(1, &scissorRect);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-	commandList->DrawInstanced(triangleVertexCount, 1, 0, 0);
-}
-
-/**
-* 四角形を描画する.
-*/
-void Graphics::DrawRectangle()
-{
-	const PSO& pso = GetPSO(PSOType_NoiseTexture);
-	commandList->SetPipelineState(pso.pso.Get());
-	commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
-	commandList->SetGraphicsRootDescriptorTable(0, texBackground.handle);
-	commandList->SetGraphicsRoot32BitConstants(1, 16, &matViewProjection, 0);
-
-	static float scrollOffset = 0.0f;
-	commandList->SetGraphicsRoot32BitConstants(2, 1, &scrollOffset, 0);
-	scrollOffset -= 0.002f;
-
-	commandList->RSSetViewports(1, &viewport);
-	commandList->RSSetScissorRects(1, &scissorRect);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-	commandList->IASetIndexBuffer(&indexBufferView);
-	commandList->DrawIndexedInstanced(_countof(indices), 1, 0, triangleVertexCount, 0);
-}
-
-float NoiseSeed(float x, float y)
-{
-	float i;
-	return std::modf(std::sin(x * 12.9898f + y * 78.233f) * 43758.5453123f, &i);
-}
-
-float Noise(float x, float y)
-{
-	float iy;
-	const float fy = std::modf(y, &iy);
-	const float uy = fy * fy * (3.0f - 2.0f * fy);
-	float ix;
-	const float fx = std::modf(x, &ix);
-	const float ux = fx * fx * (3.0f - 2.0f * fx);
-	const float a = NoiseSeed(ix, iy);
-	const float b = NoiseSeed(ix + 1.0f, iy);
-	const float c = NoiseSeed(ix, iy + 1.0f);
-	const float d = NoiseSeed(ix + 1.0f, iy + 1.0f);
-	const float value = (a * (1.0f - ux) + b * ux) + (c - a) * uy * (1.0f - ux) + (d - b) * uy * ux;
-	if (value < 0.0f) {
-		return 0.0f;
-	}
-	return value;
-}
-
-/**
-* テクスチャを作成する.
-*/
-bool Graphics::CreateNoiseTexture(Resource::ResourceLoader& loader)
-{
-	const D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R8G8B8A8_UNORM, 256, 256, 1, 1);
-	std::vector<uint8_t> noise;
-	noise.resize(static_cast<size_t>(desc.Width * desc.Height) * 4);
-	uint8_t* p = noise.data();
-#if 1
-	for (float y = 0; y < desc.Height; ++y) {
-		const float fy = (y / (desc.Height - 1) * 2.0f) - 1.35f;
-		for (float x = 0; x < desc.Width; ++x) {
-			const float fx = (x / (desc.Width - 1) * 2.0f) - 1.0f;
-			const float distance = std::sqrt(fx * fx + fy * fy);
-			const float t = 0.02f / std::abs(0.1f - std::fmod(distance, 0.2f));
-			const uint8_t col = t < 1.0f ? static_cast<uint8_t>(t * 255.0f) : 255;
-			p[0] = col;
-			p[1] = col;
-			p[2] = col;
-			p[3] = 255;
-			p += 4;
-		}
-	}
-#else
-	for (float y = 0; y < desc.Height; ++y) {
-		const float fy = y / (desc.Height - 1);
-		for (float x = 0; x < desc.Width; ++x) {
-			const float fx = x / (desc.Width - 1);
-			float val = 0.0f;
-			float scale = 0.5f;
-			float freq = 4.0f;
-			for (int i = 0; i < 4; ++i) {
-				val += Noise(fx * freq, fy * freq) * scale;
-				scale *= 0.5f;
-				freq *= 2.0f;
-			}
-			const uint8_t col = static_cast<uint8_t>(val * 255.0f);
-			p[0] = col;
-			p[1] = col;
-			p[2] = col;
-			p[3] = 255;
-			p += 4;
-		}
-	}
-#endif
-	return loader.Create(texNoise, 1, desc, noise.data(), L"texNoise");
-}
-
-/**
-* テクスチャを読み込む.
-*/
-bool Graphics::LoadTexture()
-{
-	Resource::ResourceLoader loader;
-	if (!loader.Begin(csuDescriptorHeap)) {
-		return false;
-	}
-	if (!loader.LoadFromFile(texBackground, 0, L"Res/UnknownPlanet.png")) {
-		return false;
-	}
-	if (!CreateNoiseTexture(loader)) {
-		return false;
-	}
-	if (!loader.LoadFromFile(texSprite, 2, L"Res/Objects.png")) {
-		return false;
-	}
-	ID3D12CommandList* ppCommandLists[] = { loader.End() };
-	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	WaitForGpu();
 	return true;
 }
 

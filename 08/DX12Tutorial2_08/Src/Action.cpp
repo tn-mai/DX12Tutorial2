@@ -341,6 +341,125 @@ bool Controller::IsFinished() const
 	return pattern && codeCounter >= pattern->data.size();
 }
 
+/**
+* テスト用パターンリストを作成する.
+*/
+PatternList CreateDefaultPatternList()
+{
+	PatternList ptnList;
+	ptnList.resize(6);
+	ptnList[0].name = "MoveTest";
+	ptnList[0].data.push_back(Code(Type::Move));
+	ptnList[0].data.push_back(Code(-100));
+	ptnList[0].data.push_back(Code(100));
+	ptnList[0].data.push_back(Code(100));
+	ptnList[0].data.push_back(Code(Type::Stop));
+	ptnList[0].data.push_back(Code(1));
+	ptnList[0].data.push_back(Code(Type::Move));
+	ptnList[0].data.push_back(Code(100));
+	ptnList[0].data.push_back(Code(100));
+	ptnList[0].data.push_back(Code(200));
+	ptnList[1].name = "BezierTest";
+	ptnList[1].data.push_back(Code(Type::Bezier));
+	ptnList[1].data.push_back(Code(-400));
+	ptnList[1].data.push_back(Code(600));
+	ptnList[1].data.push_back(Code(400));
+	ptnList[1].data.push_back(Code(600));
+	ptnList[1].data.push_back(Code(0));
+	ptnList[1].data.push_back(Code(0));
+	ptnList[1].data.push_back(Code(4));
+
+	ptnList[2].name = "WaveL";
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(-100));
+	ptnList[2].data.push_back(Code(100));
+	ptnList[2].data.push_back(Code(200));
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(-110));
+	ptnList[2].data.push_back(Code(150));
+	ptnList[2].data.push_back(Code(150));
+
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(-100));
+	ptnList[2].data.push_back(Code(200));
+	ptnList[2].data.push_back(Code(175));
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(100));
+	ptnList[2].data.push_back(Code(400));
+	ptnList[2].data.push_back(Code(200));
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(110));
+	ptnList[2].data.push_back(Code(450));
+	ptnList[2].data.push_back(Code(150));
+
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(100));
+	ptnList[2].data.push_back(Code(500));
+	ptnList[2].data.push_back(Code(175));
+	ptnList[2].data.push_back(Code(Type::Move));
+	ptnList[2].data.push_back(Code(-100));
+	ptnList[2].data.push_back(Code(700));
+	ptnList[2].data.push_back(Code(200));
+
+	ptnList[3].name = "WaveR";
+	ptnList[3].data.push_back(Code(Type::Move));
+	ptnList[3].data.push_back(Code(100));
+	ptnList[3].data.push_back(Code(150));
+	ptnList[3].data.push_back(Code(200));
+	ptnList[3].data.push_back(Code(Type::Move));
+	ptnList[3].data.push_back(Code(-100));
+	ptnList[3].data.push_back(Code(300));
+	ptnList[3].data.push_back(Code(200));
+	ptnList[3].data.push_back(Code(Type::Move));
+	ptnList[3].data.push_back(Code(100));
+	ptnList[3].data.push_back(Code(450));
+	ptnList[3].data.push_back(Code(200));
+	ptnList[3].data.push_back(Code(Type::Move));
+	ptnList[3].data.push_back(Code(-100));
+	ptnList[3].data.push_back(Code(600));
+	ptnList[3].data.push_back(Code(200));
+	ptnList[3].data.push_back(Code(Type::Move));
+	ptnList[3].data.push_back(Code(100));
+	ptnList[3].data.push_back(Code(750));
+	ptnList[3].data.push_back(Code(200));
+	ptnList[4].name = "ZigzagL";
+	ptnList[4].data.push_back(Code(Type::Move));
+	ptnList[4].data.push_back(Code(0));
+	ptnList[4].data.push_back(Code(200));
+	ptnList[4].data.push_back(Code(200));
+	ptnList[4].data.push_back(Code(Type::Move));
+	ptnList[4].data.push_back(Code(150));
+	ptnList[4].data.push_back(Code(100));
+	ptnList[4].data.push_back(Code(150));
+	ptnList[4].data.push_back(Code(Type::Move));
+	ptnList[4].data.push_back(Code(150));
+	ptnList[4].data.push_back(Code(500));
+	ptnList[4].data.push_back(Code(200));
+	ptnList[4].data.push_back(Code(Type::Move));
+	ptnList[4].data.push_back(Code(150));
+	ptnList[4].data.push_back(Code(-100));
+	ptnList[4].data.push_back(Code(300));
+	ptnList[5].name = "ZigzagR";
+	ptnList[5].data.push_back(Code(Type::Move));
+	ptnList[5].data.push_back(Code(0));
+	ptnList[5].data.push_back(Code(200));
+	ptnList[5].data.push_back(Code(200));
+	ptnList[5].data.push_back(Code(Type::Move));
+	ptnList[5].data.push_back(Code(-150));
+	ptnList[5].data.push_back(Code(100));
+	ptnList[5].data.push_back(Code(150));
+	ptnList[5].data.push_back(Code(Type::Move));
+	ptnList[5].data.push_back(Code(-150));
+	ptnList[5].data.push_back(Code(500));
+	ptnList[5].data.push_back(Code(200));
+	ptnList[5].data.push_back(Code(Type::Move));
+	ptnList[5].data.push_back(Code(-150));
+	ptnList[5].data.push_back(Code(-100));
+	ptnList[5].data.push_back(Code(300));
+
+	return ptnList;
+}
+
 } // namespcee B
 
 /**

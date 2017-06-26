@@ -111,6 +111,8 @@ private:
 #endif ACTIION_ENABLE_SECTIONING_METHOD_COMPARISON
 };
 
+PatternList CreateDefaultPatternList();
+
 } // namespace B
 
 struct List;

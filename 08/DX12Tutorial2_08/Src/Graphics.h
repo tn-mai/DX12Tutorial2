@@ -33,10 +33,6 @@ public:
 
 	bool CreateVertexBuffer();
 	bool CreateIndexBuffer();
-	bool LoadTexture();
-	bool CreateNoiseTexture(Resource::ResourceLoader&);
-	void DrawTriangle();
-	void DrawRectangle();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const;
@@ -85,6 +81,7 @@ public:
 	Resource::TextureMap texMap;
 	Sprite::Renderer spriteRenderer;
 
+	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
 private:
 	Graphics() = default;
 	Graphics(const Graphics&) = delete;

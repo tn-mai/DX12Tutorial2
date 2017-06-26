@@ -18,6 +18,8 @@ namespace SpatialGrid {
 class Entity : public Sprite::Sprite
 {
 public:
+	typedef std::function<void(Entity&)> UpdateFuncType;
+
 	Entity(uint16_t gid, const AnimationList& al, const DirectX::XMFLOAT3& p, const Collision::Shape& s);
 	Entity(const Entity& src) = default;
 	~Entity() = default;
@@ -31,12 +33,14 @@ public:
 	void SetGroupId(int gid) { groupId = static_cast<uint16_t>(gid); }
 	void SetShape(const Collision::Shape& s) { shape = s; }
 	void RequestRemove() { hasRemoveRequest = true; }
+	UpdateFuncType SetUpdateFunc(UpdateFuncType func);
 
 	int actId = -1;
 private:
 	uint16_t groupId;
 	bool hasRemoveRequest;
 	Collision::Shape shape;
+	UpdateFuncType updateFunc;
 };
 
 /**

@@ -36,6 +36,24 @@ Entity::Entity(uint16_t gid, const AnimationList& al, const XMFLOAT3& p, const C
 void Entity::Update(double delta)
 {
 	Sprite::Update(delta);
+	actControllerB.Update(*this, delta);
+	if (updateFunc) {
+		updateFunc(*this);
+	}
+}
+
+/**
+* 更新関数を設定する.
+*
+* @param func 設定する更新関数.
+*
+* @return 以前に設定されていた更新関数.
+*/
+Entity::UpdateFuncType Entity::SetUpdateFunc(UpdateFuncType func)
+{
+	UpdateFuncType tmp = updateFunc;
+	updateFunc = func;
+	return tmp;
 }
 
 /**
@@ -100,8 +118,8 @@ Entity* World::AddEntity(uint16_t groupId, const AnimationList& al, const XMFLOA
 	Entity* p;
 	if (freeList.empty()) {
 		entityBuffer.emplace_back(groupId, al, pos, s);
-		decltype(entityBuffer) tmp;
-		tmp = entityBuffer;
+//		decltype(entityBuffer) tmp;
+//		tmp = entityBuffer;
 		p = &entityBuffer.back();
 	} else {
 		p = freeList.back();

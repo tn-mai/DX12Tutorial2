@@ -19,6 +19,12 @@
     <Filter Include="ヘッダー ファイル\Scene">
       <UniqueIdentifier>{41131cfb-61a4-4ccf-9e32-8e531e5fa048}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\SampleScene">
+      <UniqueIdentifier>{fc2ccd57-6d2e-488e-abaf-99dd4c5d39f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\SampleScene">
+      <UniqueIdentifier>{74c343d1-d188-4e2f-b691-7e86b8a5b722}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\Main.cpp">
@@ -83,6 +89,18 @@
     </ClCompile>
     <ClCompile Include="Src\File.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\SampleScene\Title.cpp">
+      <Filter>ソース ファイル\SampleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\SampleScene\MainGame.cpp">
+      <Filter>ソース ファイル\SampleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\SampleScene\GameClear.cpp">
+      <Filter>ソース ファイル\SampleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\SampleScene\GameOver.cpp">
+      <Filter>ソース ファイル\SampleScene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +172,18 @@
     </ClInclude>
     <ClInclude Include="Src\EnemyData.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\SampleScene\MainGame.h">
+      <Filter>ヘッダー ファイル\SampleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\SampleScene\Title.h">
+      <Filter>ヘッダー ファイル\SampleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\SampleScene\GameClear.h">
+      <Filter>ヘッダー ファイル\SampleScene</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\SampleScene\GameOver.h">
+      <Filter>ヘッダー ファイル\SampleScene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

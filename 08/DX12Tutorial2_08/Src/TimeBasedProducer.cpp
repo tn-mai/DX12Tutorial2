@@ -201,4 +201,15 @@ void TimeBasedProducer::Update(double delta, GenSpriteFunc func)
 	}
 }
 
+/*
+* 全てのイベントが終了したか調べる.
+*
+* @retval true  全て終了した.
+* @retval false まだ終了していないイベントがある.
+*/
+bool TimeBasedProducer::IsFinish() const
+{
+	return (itrCurrentEvent == schedule.end()) && activeEventList.empty();
+}
+
 } // namespace EventProducer

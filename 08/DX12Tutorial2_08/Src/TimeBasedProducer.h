@@ -28,6 +28,7 @@ public:
 
 	bool LoadScheduleFromJsonFile(const wchar_t* filename, NameToIndexFunc actionFunc, NameToIndexFunc enemyFunc);
 	void Update(double delta, GenSpriteFunc func);
+	bool IsFinish() const;
 
 private:
 

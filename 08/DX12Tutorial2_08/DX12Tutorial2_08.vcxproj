@@ -173,6 +173,10 @@
     <ClCompile Include="Src\Json.cpp" />
     <ClCompile Include="Src\Main.cpp" />
     <ClCompile Include="Src\PSO.cpp" />
+    <ClCompile Include="Src\SampleScene\GameClear.cpp" />
+    <ClCompile Include="Src\SampleScene\GameOver.cpp" />
+    <ClCompile Include="Src\SampleScene\MainGame.cpp" />
+    <ClCompile Include="Src\SampleScene\Title.cpp" />
     <ClCompile Include="Src\Scene.cpp" />
     <ClCompile Include="Src\Scene\EndingScene.cpp" />
     <ClCompile Include="Src\Scene\GameOverScene.cpp" />
@@ -198,6 +202,10 @@
     <ClInclude Include="Src\Graphics.h" />
     <ClInclude Include="Src\Json.h" />
     <ClInclude Include="Src\PSO.h" />
+    <ClInclude Include="Src\SampleScene\GameClear.h" />
+    <ClInclude Include="Src\SampleScene\GameOver.h" />
+    <ClInclude Include="Src\SampleScene\MainGame.h" />
+    <ClInclude Include="Src\SampleScene\Title.h" />
     <ClInclude Include="Src\Scene.h" />
     <ClInclude Include="Src\Scene\EndingScene.h" />
     <ClInclude Include="Src\Scene\GameOverScene.h" />

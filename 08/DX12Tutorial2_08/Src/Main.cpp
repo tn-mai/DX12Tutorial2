@@ -21,6 +21,11 @@
 #include "Scene/GameOverScene.h"
 #include "Scene/EndingScene.h"
 
+#include "SampleScene\Title.h"
+#include "SampleScene\MainGame.h"
+#include "SampleScene\GameClear.h"
+#include "SampleScene\GameOver.h"
+
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
@@ -57,21 +62,22 @@ enum SceneId
 * シーン作成情報.
 */
 static const Scene::Creator creatorList[] = {
-	{ SceneId_Title, TitleScene::Create },
-	{ SceneId_MainGame, MainGameScene::Create },
-	{ SceneId_Ending, EndingScene::Create },
+	{ SceneId_Title, SampleScene::TitleScene::Create },
+	{ SceneId_MainGame, SampleScene::MainGameScene::Create },
+	{ SceneId_Ending, SampleScene::GameClearScene::Create },
 	{ SceneId_Pause, PauseScene::Create },
-	{ SceneId_GameOver, GameOverScene::Create },
+	{ SceneId_GameOver, SampleScene::GameOverScene::Create },
 };
 
 /**
 * シーン遷移情報.
 */
 const Scene::Transition transitionList[] = {
-	{ SceneId_Title,{ TitleScene::ExitCode_MainGame, Scene::TransitionType::Jump, SceneId_MainGame } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_Ending, Scene::TransitionType::Jump, SceneId_Ending } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_Pause, Scene::TransitionType::Push, SceneId_Pause } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_GameOver, Scene::TransitionType::Jump, SceneId_GameOver } },
+	{ SceneId_Title,{ TitleScene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_MainGame } },
+//	{ SceneId_Title,{ TitleScene::ExitCode_MainGame, Scene::TransitionType::Jump, SceneId_MainGame } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_Ending, Scene::TransitionType::Jump, SceneId_Ending } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_Pause, Scene::TransitionType::Push, SceneId_Pause } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_GameOver, Scene::TransitionType::Jump, SceneId_GameOver } },
 	{ SceneId_Ending,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
 	{ SceneId_Pause,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Pop, 0 } },
 	{ SceneId_GameOver,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
@@ -239,20 +245,6 @@ bool Render()
 
 	sceneController.Draw(graphics);
 
-#if 0
-	graphics.DrawTriangle();
-	graphics.DrawRectangle();
-
-	Sprite::RenderingInfo spriteRenderingInfo;
-	spriteRenderingInfo.rtvHandle = graphics.GetRTVHandle();
-	spriteRenderingInfo.dsvHandle = graphics.GetDSVHandle();
-	spriteRenderingInfo.viewport = graphics.viewport;
-	spriteRenderingInfo.scissorRect = graphics.scissorRect;
-	spriteRenderingInfo.texDescHeap = graphics.csuDescriptorHeap.Get();
-	spriteRenderingInfo.matViewProjection = graphics.matViewProjection;
-	graphics.spriteRenderer.Draw(graphics.spriteList, cellList, GetPSO(PSOType_Sprite), graphics.texSprite, spriteRenderingInfo);
-#endif
-
 	graphics.spriteRenderer.End();
 	if (!graphics.EndRendering()) {
 		return false;
@@ -266,40 +258,10 @@ bool Render()
 void Update(double delta)
 {
 	UpdateGamePad(static_cast<float>(delta));
-	GamePad& gamepad = GetGamePad(GamePadId_1P);
-
 	Graphics::Graphics& graphics = Graphics::Graphics::Get();
-	const float speed = static_cast<float>(200.0 * delta);
-	if (gamepad.buttons & GamePad::DPAD_LEFT) {
-		graphics.spriteList[0].pos.x -= speed;
-	} else if (gamepad.buttons & GamePad::DPAD_RIGHT) {
-		graphics.spriteList[0].pos.x += speed;
-	}
-	if (gamepad.buttons & GamePad::DPAD_UP) {
-		graphics.spriteList[0].pos.y -= speed;
-	} else if (gamepad.buttons & GamePad::DPAD_DOWN) {
-		graphics.spriteList[0].pos.y += speed;
-	}
-
-	sceneController.Update(sceneContext, delta);
-
-#if 0
-	spriteList[0].rotation += 0.1f;
-	if (spriteList[0].rotation >= 3.1415f * 2.0f) {
-		spriteList[0].rotation -= 3.1415f * 2.0f;
-	}
-#endif
-	static uint32_t seqNo = 0;
-	if (gamepad.buttons & GamePad::A) {
-		++seqNo;
-		if (seqNo >= graphics.spriteList[0].animeController.GetSeqCount()) {
-			seqNo = 0;
-		}
-		graphics.spriteList[0].animeController.SetSeqIndex(seqNo);
-	}
-
 	for (Sprite::Sprite& sprite : graphics.spriteList) {
-		sprite.animeController.Update(delta);
+		sprite.Update(delta);
 	}
+	sceneController.Update(sceneContext, delta);
 }
 
