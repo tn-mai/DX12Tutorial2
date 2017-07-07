@@ -121,6 +121,8 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   cbCPUAddress = CD3DX12_CPU_DESCRIPTOR_HANDLE(csuDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 10, handleSize);
   device->CreateConstantBufferView(&constantBufferView, cbCPUAddress);
 
+  rotEye = { 3.14159265f / 3.0f, 0 };
+
   return true;
 }
 
@@ -147,21 +149,27 @@ void ProcedualTerrain::Update()
 		rotEye.x += 2.0f / 180.0f * 3.1415926f;
 	}
 #endif
-	Graphics::Graphics& graphics = Graphics::Graphics::Get();
+    static float offsetZ = 0;
+    static float base = 0;
+    const float limitOffsetZ = 100.0f / static_cast<float>(height - 1);
+    offsetZ += 0.1f;
+    if (offsetZ >= limitOffsetZ) {
+      offsetZ -= limitOffsetZ;
+      base += limitOffsetZ;
+    }
+    Graphics::Graphics& graphics = Graphics::Graphics::Get();
 	ConstantBuffer& constant = *pConstantBuffer;
-    rotEye = { 3.14159265f / 3.0f, 0 };
-	const XMMATRIX matEye = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
+	const XMMATRIX matEye = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y) * XMMatrixTranslation(0, 0, offsetZ);
 	const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -70, 1 }, matEye);
-	const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEye);
-	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, XMVECTOR{ 0, 0, 0, 1 }, eyeUp);
+    const XMVECTOR eyeForcus = XMVector4Transform(XMVECTOR{ 0, 0, 0, 1 }, matEye);
+    const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEye);
+	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, eyeForcus, eyeUp);
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
 	XMStoreFloat3(&constant.cbFrame.eye, eyePos);
 	XMStoreFloat3(&constant.cbFrame.lightDir, XMVECTOR{1.0f / 1.41421356f, -1.0f / 1.41421356f, 0, 1});
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
-    static float base = 0;
-    base += 0.005f;
 	constant.cbTerrain = { 25, 100, 100, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
