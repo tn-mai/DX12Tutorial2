@@ -11,6 +11,7 @@
 #include "../Audio.h"
 #include "../SpatialGrid.h"
 #include "../TimeBasedProducer.h"
+#include "../ProcedualTerrain.h"
 
 namespace SampleScene {
 
@@ -71,6 +72,7 @@ private:
 	SpatialGrid::World world;
 	SpatialGrid::Entity* pPlayer;
 	EventProducer::TimeBasedProducer producer;
+	ProcedualTerrain terrain;
 };
 
 }

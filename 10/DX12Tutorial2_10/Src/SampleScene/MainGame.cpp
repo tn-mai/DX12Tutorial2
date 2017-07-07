@@ -176,6 +176,8 @@ bool MainGameScene::Load(::Scene::Context&)
   pPlayer->rotation = 3.14f;
   pPlayer->SetSeqIndex(AnmSeqId_Player);
 
+  terrain.Init(graphics.device, graphics.csuDescriptorHeap);
+
   return true;
 }
 
@@ -220,7 +222,7 @@ int MainGameScene::Update(::Scene::Context&, double delta)
       se[SeId_PlayerShot]->Play();
     }
   }
-
+#if 0
   for (Sprite::Sprite& sprite : spriteList) {
     sprite.Update(delta);
   }
@@ -232,12 +234,14 @@ int MainGameScene::Update(::Scene::Context&, double delta)
     p->SetSeqIndex(AnmSeqId_Enemy);
     p->actControllerB.SetPattern(&ptnList[std::min<uint32_t>(action, ptnList.size())]);
   });
-
+#endif
   uint32_t scoreTmp = score;
   for (auto itr = spriteList.end() - 1; itr != spriteList.begin(); --itr) {
     itr->animeController.SetCellIndex('0' + (scoreTmp % 10));
     scoreTmp /= 10;
   }
+
+  terrain.Update();
 
   if (producer.IsFinish()) {
     clearTime += delta;
@@ -258,19 +262,21 @@ int MainGameScene::Update(::Scene::Context&, double delta)
 */
 void MainGameScene::Draw(Graphics::Graphics& graphics) const
 {
-Sprite::RenderingInfo spriteRenderingInfo;
-spriteRenderingInfo.rtvHandle = graphics.GetRTVHandle();
-spriteRenderingInfo.dsvHandle = graphics.GetDSVHandle();
-spriteRenderingInfo.viewport = graphics.viewport;
-spriteRenderingInfo.scissorRect = graphics.scissorRect;
-spriteRenderingInfo.texDescHeap = graphics.csuDescriptorHeap.Get();
-spriteRenderingInfo.matViewProjection = graphics.matViewProjection;
+  terrain.Draw(graphics.commandList.Get(), 0);
 
-const Sprite::Sprite* p = spriteList.data();
-const size_t end = spriteList.size();
-graphics.spriteRenderer.Draw(p + 0, p + 1, cellList[0].list.data(), bundleId[TexId_BackGround], spriteRenderingInfo);
-graphics.spriteRenderer.Draw(world.Begin(), world.End(), cellList[1].list.data(), bundleId[TexId_Objects], spriteRenderingInfo);
-graphics.spriteRenderer.Draw(p + 1, p + end, cellList[0].list.data(), bundleId[TexId_Font], spriteRenderingInfo);
+  Sprite::RenderingInfo spriteRenderingInfo;
+  spriteRenderingInfo.rtvHandle = graphics.GetRTVHandle();
+  spriteRenderingInfo.dsvHandle = graphics.GetDSVHandle();
+  spriteRenderingInfo.viewport = graphics.viewport;
+  spriteRenderingInfo.scissorRect = graphics.scissorRect;
+  spriteRenderingInfo.texDescHeap = graphics.csuDescriptorHeap.Get();
+  spriteRenderingInfo.matViewProjection = graphics.matViewProjection;
+
+  const Sprite::Sprite* p = spriteList.data();
+  const size_t end = spriteList.size();
+//  graphics.spriteRenderer.Draw(p + 0, p + 1, cellList[0].list.data(), bundleId[TexId_BackGround], spriteRenderingInfo);
+  graphics.spriteRenderer.Draw(world.Begin(), world.End(), cellList[1].list.data(), bundleId[TexId_Objects], spriteRenderingInfo);
+  graphics.spriteRenderer.Draw(p + 1, p + end, cellList[0].list.data(), bundleId[TexId_Font], spriteRenderingInfo);
 }
 
 }

@@ -22,6 +22,7 @@ enum PSOType {
 	PSOType_Simple,
 	PSOType_NoiseTexture,
 	PSOType_Sprite,
+    PSOType_Terrain,
 	countof_PSOType
 };
 
