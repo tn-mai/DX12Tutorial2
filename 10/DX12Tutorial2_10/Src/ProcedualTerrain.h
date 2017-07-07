@@ -65,7 +65,7 @@ private:
   D3D12_CPU_DESCRIPTOR_HANDLE cbCPUAddress;
   D3D12_GPU_DESCRIPTOR_HANDLE cbGPUAddress;
   ConstantBuffer* pConstantBuffer = nullptr;
-  DirectX::XMFLOAT2 rotEye = { -3.14159265f * 0.6666f, 0 };
+  DirectX::XMFLOAT2 rotEye;
 };
 
 #endif // DX12TUTORIAL_PROCEDUALTERRAIN_H_

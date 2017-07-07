@@ -49,8 +49,8 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   Vertex* pVertex = static_cast<Vertex*>(vertexBufferAddress);
 
   // 四角形を等分した頂点データを作成する.
-  const XMVECTORF32 factor = { 100.0f / static_cast<float>(width - 1), 1, 100.0f / static_cast<float>(height - 1), 1 };
-  const XMVECTORF32 offset = { -50, 0, -50, 0 };
+  const XMVECTORF32 factor = { 100.0f / static_cast<float>(width - 1), 1, -100.0f / static_cast<float>(height - 1), 1 };
+  const XMVECTORF32 offset = { -50, 0, 50, 0 };
   for (size_t z = 0; z < height; ++z) {
     for (size_t x = 0; x < width; ++x) {
       const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
@@ -59,7 +59,6 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
       ++pVertex;
     }
   }
-
   vertexBuffer->Unmap(0, nullptr);
   vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
   vertexBufferView.StrideInBytes = sizeof(Vertex);
@@ -150,8 +149,9 @@ void ProcedualTerrain::Update()
 #endif
 	Graphics::Graphics& graphics = Graphics::Graphics::Get();
 	ConstantBuffer& constant = *pConstantBuffer;
+    rotEye = { 3.14159265f / 3.0f, 0 };
 	const XMMATRIX matEye = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
-	const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
+	const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -70, 1 }, matEye);
 	const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEye);
 	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, XMVECTOR{ 0, 0, 0, 1 }, eyeUp);
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
@@ -161,7 +161,7 @@ void ProcedualTerrain::Update()
 	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
     static float base = 0;
-    base -= 0.01f;
+    base += 0.005f;
 	constant.cbTerrain = { 25, 100, 100, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
