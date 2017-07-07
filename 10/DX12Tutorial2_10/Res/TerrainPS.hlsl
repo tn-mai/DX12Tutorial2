@@ -155,7 +155,7 @@ float4 main(DS_OUTPUT input) : SV_TARGET
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
-  float3 color = float3(0.8f, 0.8f, 0.8f);// GetColorBySlope(acos(norm.y), input.worldPosition.y);
+  float3 color = GetColorBySlope(acos(norm.y), input.worldPosition.y);
   float3 diffuse = cbFrame.lightDiffuse * dot(-cbFrame.lightDir, norm);
   float3 V = reflect(cbFrame.lightDir, norm);
   float3 toEye = normalize(cbFrame.eye - input.worldPosition);
