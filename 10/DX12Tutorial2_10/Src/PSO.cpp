@@ -23,7 +23,6 @@ const D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
 /// 地形用の頂点データ型のレイアウト.
 const D3D12_INPUT_ELEMENT_DESC terrainVertexLayout[] = {
   { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-  { "SKIRT", 0, DXGI_FORMAT_R32_UINT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 };
 
 bool LoadShader(const wchar_t* filename, const char* target, ID3DBlob** blob);

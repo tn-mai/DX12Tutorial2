@@ -29,19 +29,16 @@ cbuffer Constant : register(b0)
 struct VS_OUTPUT
 {
   float3 worldPosition : WORLDPOS;
-  uint skirt : SKIRT;
 };
 
 struct VS_INPUT
 {
   float3 position : POSITION;
-  uint skirt : SKIRT;
 };
 
 VS_OUTPUT main(VS_INPUT input)
 {
   VS_OUTPUT output;
   output.worldPosition = input.position;
-  output.skirt = input.skirt;
   return output;
 }

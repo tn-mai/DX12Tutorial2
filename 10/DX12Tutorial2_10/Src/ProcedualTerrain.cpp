@@ -18,7 +18,6 @@ using namespace DirectX;
 */
 struct Vertex {
   XMFLOAT3 position;
-  UINT skirt;
 };
 
 /**
@@ -57,38 +56,8 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
       const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
       const XMVECTOR pos = ipos * factor + offset;
       XMStoreFloat3(&pVertex->position, pos);
-      pVertex->skirt = 5;
       ++pVertex;
     }
-  }
-  // コントロールポイントを作成する.
-  for (size_t x = 0; x < width; ++x) {
-    const XMVECTORF32 ipos = { static_cast<float>(x), -10, 0, 1 };
-    const XMVECTOR pos = ipos * factor + offset;
-    XMStoreFloat3(&pVertex->position, pos);
-    pVertex->skirt = 1;
-    ++pVertex;
-  }
-  for (size_t x = 0; x < width; ++x) {
-    const XMVECTORF32 ipos = { static_cast<float>(x), -10, static_cast<float>(height - 1), 1 };
-    const XMVECTOR pos = ipos * factor + offset;
-    XMStoreFloat3(&pVertex->position, pos);
-    pVertex->skirt = 2;
-    ++pVertex;
-  }
-  for (size_t z = 0; z < height; ++z) {
-    const XMVECTORF32 ipos = { 0, -10, static_cast<float>(z), 1 };
-    const XMVECTOR pos = ipos * factor + offset;
-    XMStoreFloat3(&pVertex->position, pos);
-    pVertex->skirt = 3;
-    ++pVertex;
-  }
-  for (size_t z = 0; z < height; ++z) {
-    const XMVECTORF32 ipos = { static_cast<float>(width - 1), -10, static_cast<float>(z), 1 };
-    const XMVECTOR pos = ipos * factor + offset;
-    XMStoreFloat3(&pVertex->position, pos);
-    pVertex->skirt = 4;
-    ++pVertex;
   }
 
   vertexBuffer->Unmap(0, nullptr);
@@ -120,48 +89,6 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
       pIndexBuffer[2] = static_cast<uint16_t>(x + (z + 1) * width);
       pIndexBuffer[3] = static_cast<uint16_t>((x + 1) + (z + 1) * width);
 	  pIndexBuffer += 4;
-    }
-  }
-  uint16_t iVertex = static_cast<uint16_t>(width * height);
-  for (uint16_t x = 0; x < width - 1; ++x) {
-    pIndexBuffer[0] = iVertex;
-    pIndexBuffer[1] = iVertex + 1;
-    pIndexBuffer[2] = x;
-    pIndexBuffer[3] = x + 1;
-    pIndexBuffer += 4;
-    ++iVertex;
-  }
-  ++iVertex;
-  {
-    const uint16_t offset = static_cast<uint16_t>(width * (height - 1));
-    for (uint16_t x = 0; x < width - 1; ++x) {
-      pIndexBuffer[0] = iVertex + 1;
-      pIndexBuffer[1] = iVertex;
-      pIndexBuffer[2] = x + offset + 1;
-      pIndexBuffer[3] = x + offset;
-      pIndexBuffer += 4;
-      ++iVertex;
-    }
-  }
-  ++iVertex;
-  for (uint16_t z = 0; z < height - 1; ++z) {
-    pIndexBuffer[0] = iVertex + 1;
-    pIndexBuffer[1] = iVertex;
-    pIndexBuffer[2] = (z + 1) * width;
-    pIndexBuffer[3] = z * width;
-    pIndexBuffer += 4;
-    ++iVertex;
-  }
-  ++iVertex;
-  {
-    const uint16_t offset = static_cast<uint16_t>(width * (height - 1));
-    for (uint16_t z = 0; z < width - 1; ++z) {
-      pIndexBuffer[0] = iVertex;
-      pIndexBuffer[1] = iVertex + 1;
-      pIndexBuffer[2] = z * width + height - 1;
-      pIndexBuffer[3] = (z + 1) * width + height - 1;
-      pIndexBuffer += 4;
-      ++iVertex;
     }
   }
   indexBuffer->Unmap(0, nullptr);

@@ -30,7 +30,6 @@ cbuffer Constant : register(b0)
 struct VS_OUTPUT
 {
   float3 worldPosition : WORLDPOS;
-  uint skirt : SKIRT;
 };
 
 // èoóÕêßå‰ì_
@@ -44,7 +43,6 @@ struct HS_CONSTANT_DATA_OUTPUT
 {
   float EdgeTessFactor[4] : SV_TessFactor;
   float InsideTessFactor[2] : SV_InsideTessFactor;
-  uint skirt : SKIRT;
 };
 
 #define NUM_CONTROL_POINTS 4
@@ -62,35 +60,17 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
   uint PatchID : SV_PrimitiveID)
 {
   HS_CONSTANT_DATA_OUTPUT output;
-  output.skirt = ip[0].skirt;
 #if 0
-  if (output.skirt == 0) {
-    output.EdgeTessFactor[0] = 1.0f;
-    output.EdgeTessFactor[1] = 1.0f;
-    output.EdgeTessFactor[2] = 1.0f;
-    output.EdgeTessFactor[3] = 1.0f;
-    output.InsideTessFactor[0] = 1.0f;
-    output.InsideTessFactor[1] = 1.0f;
-  } else if (output.skirt < 5) {
-    const float3 e3 = 0.5f * (ip[2].worldPosition + ip[3].worldPosition);
-    output.EdgeTessFactor[0] = 1.0f;
-    output.EdgeTessFactor[1] = 1.0f;
-    output.EdgeTessFactor[2] = 1.0f;
-    output.EdgeTessFactor[3] = CalcTessFactor(e3);
-    output.InsideTessFactor[0] = 1.0f;
-    output.InsideTessFactor[1] = 1.0f;
-  } else {
-    const float3 e0 = 0.5f * (ip[0].worldPosition + ip[2].worldPosition);
-    const float3 e1 = 0.5f * (ip[0].worldPosition + ip[1].worldPosition);
-    const float3 e2 = 0.5f * (ip[1].worldPosition + ip[3].worldPosition);
-    const float3 e3 = 0.5f * (ip[2].worldPosition + ip[3].worldPosition);
-    const float3 center = 0.5f * (e1 + e3);
-    output.EdgeTessFactor[0] = CalcTessFactor(e0);
-    output.EdgeTessFactor[1] = CalcTessFactor(e1);
-    output.EdgeTessFactor[2] = CalcTessFactor(e2);
-    output.EdgeTessFactor[3] = CalcTessFactor(e3);
-    output.InsideTessFactor[0] = output.InsideTessFactor[1] = CalcTessFactor(center);
-  }
+  const float3 e0 = 0.5f * (ip[0].worldPosition + ip[2].worldPosition);
+  const float3 e1 = 0.5f * (ip[0].worldPosition + ip[1].worldPosition);
+  const float3 e2 = 0.5f * (ip[1].worldPosition + ip[3].worldPosition);
+  const float3 e3 = 0.5f * (ip[2].worldPosition + ip[3].worldPosition);
+  const float3 center = 0.5f * (e1 + e3);
+  output.EdgeTessFactor[0] = CalcTessFactor(e0);
+  output.EdgeTessFactor[1] = CalcTessFactor(e1);
+  output.EdgeTessFactor[2] = CalcTessFactor(e2);
+  output.EdgeTessFactor[3] = CalcTessFactor(e3);
+  output.InsideTessFactor[0] = output.InsideTessFactor[1] = CalcTessFactor(center);
 #else
   output.EdgeTessFactor[0] = 4.0f;
   output.EdgeTessFactor[1] = 4.0f;

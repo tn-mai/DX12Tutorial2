@@ -37,7 +37,6 @@ struct HS_CONSTANT_DATA_OUTPUT
 {
   float EdgeTessFactor[4] : SV_TessFactor;
   float InsideTessFactor[2] : SV_InsideTessFactor;
-  uint skirt : SKIRT;
 };
 
 // o—Í§Œä“_
@@ -98,10 +97,8 @@ DS_OUTPUT main(
     lerp(patch[2].worldPosition, patch[3].worldPosition, domain.x),
     domain.y);
 
-  if ((input.skirt >= 5) || (input.skirt > 0 && domain.y == 1)) {
-    const float h = HeightMap(output.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
-    output.worldPosition.y = h * cbTerrain.scale;
-  }
-  output.vPosition =  mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
+  const float h = HeightMap(output.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
+  output.worldPosition.y = h * cbTerrain.scale;
+  output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
   return output;
 }
