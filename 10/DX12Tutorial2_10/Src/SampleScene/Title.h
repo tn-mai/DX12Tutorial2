@@ -13,6 +13,9 @@ namespace SampleScene {
 class TitleScene : public Scene::Scene
 {
 public:
+	enum {
+		ExitCode_MainGame = ExitCode_User,
+	};
 	static ::Scene::ScenePtr Create();
 	~TitleScene() = default;
 

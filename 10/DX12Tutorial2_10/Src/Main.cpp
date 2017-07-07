@@ -35,7 +35,7 @@ const int clientWidth = 800;
 const int clientHeight = 600;
 HWND hwnd = nullptr;
 
-HRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 Scene::TransitionController sceneController;
 Scene::Context sceneContext;
@@ -58,30 +58,56 @@ enum SceneId
 	SceneId_GameOver,
 };
 
+#define USE_SAMPLE_SCENE
+#ifdef USE_SAMPLE_SCENE
 /**
 * シーン作成情報.
 */
 static const Scene::Creator creatorList[] = {
-	{ SceneId_Title, TitleScene::Create },
-	{ SceneId_MainGame, MainGameScene::Create },
-	{ SceneId_Ending, EndingScene::Create },
+	{ SceneId_Title, SampleScene::TitleScene::Create },
+	{ SceneId_MainGame, SampleScene::MainGameScene::Create },
+	{ SceneId_Ending, SampleScene::GameClearScene::Create },
 	{ SceneId_Pause, PauseScene::Create },
-	{ SceneId_GameOver, GameOverScene::Create },
+	{ SceneId_GameOver, SampleScene::GameOverScene::Create },
 };
 
 /**
 * シーン遷移情報.
 */
 const Scene::Transition transitionList[] = {
-//	{ SceneId_Title,{ TitleScene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_MainGame } },
-	{ SceneId_Title,{ TitleScene::ExitCode_MainGame, Scene::TransitionType::Jump, SceneId_MainGame } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_Ending, Scene::TransitionType::Jump, SceneId_Ending } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_Pause, Scene::TransitionType::Push, SceneId_Pause } },
-	{ SceneId_MainGame,{ MainGameScene::ExitCode_GameOver, Scene::TransitionType::Jump, SceneId_GameOver } },
+	{ SceneId_Title,{ SampleScene::TitleScene::ExitCode_MainGame, Scene::TransitionType::Jump, SceneId_MainGame } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_Ending, Scene::TransitionType::Jump, SceneId_Ending } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_Pause, Scene::TransitionType::Push, SceneId_Pause } },
+	{ SceneId_MainGame,{ SampleScene::MainGameScene::ExitCode_GameOver, Scene::TransitionType::Jump, SceneId_GameOver } },
 	{ SceneId_Ending,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
 	{ SceneId_Pause,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Pop, 0 } },
 	{ SceneId_GameOver,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
 };
+#else
+/**
+* シーン作成情報.
+*/
+static const Scene::Creator creatorList[] = {
+  { SceneId_Title, TitleScene::Create },
+  { SceneId_MainGame, MainGameScene::Create },
+  { SceneId_Ending, EndingScene::Create },
+  { SceneId_Pause, PauseScene::Create },
+  { SceneId_GameOver, GameOverScene::Create },
+};
+
+/**
+* シーン遷移情報.
+*/
+const Scene::Transition transitionList[] = {
+  { SceneId_Title,{ TitleScene::ExitCode_MainGame, Scene::TransitionType::Jump, SceneId_MainGame } },
+  { SceneId_MainGame,{ MainGameScene::ExitCode_Ending, Scene::TransitionType::Jump, SceneId_Ending } },
+  { SceneId_MainGame,{ MainGameScene::ExitCode_Pause, Scene::TransitionType::Push, SceneId_Pause } },
+  { SceneId_MainGame,{ MainGameScene::ExitCode_GameOver, Scene::TransitionType::Jump, SceneId_GameOver } },
+  { SceneId_Ending,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
+  { SceneId_Pause,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Pop, 0 } },
+  { SceneId_GameOver,{ Scene::Scene::ExitCode_Exit, Scene::TransitionType::Jump, SceneId_Title } },
+};
+#endif // USE_SAMPLE_SCENE
 
 /**
 * スプライト用セルデータ.
@@ -175,7 +201,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 	return 0;
 }
 
-HRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	GamePad& gamepad = GetGamePad(GamePadId_1P);
 	switch (msg) {
@@ -230,6 +256,7 @@ bool InitializeD3D()
 
 void FinalizeD3D()
 {
+	Graphics::Graphics::Get().WaitForGpu();
 	sceneController.Stop(sceneContext);
 	Audio::Engine::Get().Destroy();
 	Graphics::Graphics::Get().Finalize();

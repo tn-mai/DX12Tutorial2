@@ -97,7 +97,7 @@ int TitleScene::Update(::Scene::Context&, double delta)
 	if (startTimer > 0) {
 		startTimer -= delta;
 		if (startTimer <= 0) {
-			return ExitCode_Exit;
+			return ExitCode_MainGame;
 		}
 		const float blink = (std::fmod(startTimer, 0.25) > 0.125) ? 0.0f : 1.0f;
 		for (auto itr = spriteList.begin() + 2; itr != spriteList.end(); ++itr) {
