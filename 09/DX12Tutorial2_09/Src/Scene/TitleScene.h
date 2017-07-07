@@ -47,6 +47,7 @@ private:
 	double time;
 	bool started;
 	Audio::SoundPtr seStart;
+    Audio::SoundPtr bgm;
 	Sprite::BundleId bundleId[4];
 
 	Action::B::PatternList ptnList;

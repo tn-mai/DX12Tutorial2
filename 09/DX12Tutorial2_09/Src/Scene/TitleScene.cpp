@@ -195,6 +195,8 @@ bool TitleScene::Load(::Scene::Context&)
 	}
 
 	seStart = Audio::Engine::Get().Prepare(L"Res/SE/Start.wav");
+    bgm = Audio::Engine::Get().PrepareStream(L"Res/SE/Title.xwm");
+    bgm->Play(Audio::Flag_Loop);
 
 	time = 0.0f;
 	started = 0.0f;
@@ -365,6 +367,7 @@ int TitleScene::Update(::Scene::Context&, double delta)
 	} else {
 		const GamePad gamepad = GetGamePad(GamePadId_1P);
 		if (gamepad.buttonDown & (GamePad::A | GamePad::B | GamePad::START)) {
+			bgm->Stop();
 			seStart->Play();
 			started = true;
 		}
