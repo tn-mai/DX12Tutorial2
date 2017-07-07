@@ -66,7 +66,7 @@ float HeightMap(float2 texcoord)
   float value = Noise(texcoord * freq) * 0.5; freq *= 2.01;
   value += Noise(texcoord * freq) * 0.25; freq *= 2.02;
   value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
-//  value += Noise(texcoord * freq) * 0.0625;
+  //  value += Noise(texcoord * freq) * 0.0625;
   return max(0, 1 - value * 2);
 }
 
@@ -92,10 +92,10 @@ float3 EstimateNormal(float2 texcoord)
   float zi = HeightMap(i) * cbTerrain.scale;
 
   const float x = ((zi + zg) - (zc + ze));
-  const float y = ((zc + zi) - (ze + zg));
+  const float z = ((zc + zi) - (ze + zg));
   //float x = zg + 2 * zh + zi - zc - 2 * zd - ze;
-  //float y = 2 * zb + zc + zi - ze - 2 * zf - zg;
-  float z = 4.0f;
+  //float z = 2 * zb + zc + zi - ze - 2 * zf - zg;
+  float y = 4.0f;
 
   return normalize(float3(x, y, z));
 }
@@ -151,11 +151,11 @@ float3 GetColorBySlope(float slope, float height) {
 
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
-  float3 norm = EstimateNormal(input.worldPosition.xy / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
+  float3 norm = EstimateNormal(input.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
   float3 viewvector = cbFrame.eye - input.worldPosition;
-  //float3 color = float1(HeightMap(input.worldPosition.xy * (1.0 / 100.0))).xxx;
+  //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
-  float3 color = float3(0.8f, 0.8f, 0.8f);// GetColorBySlope(acos(norm.z), input.worldPosition.z);
+  float3 color = float3(0.8f, 0.8f, 0.8f);// GetColorBySlope(acos(norm.y), input.worldPosition.y);
   float3 diffuse = cbFrame.lightDiffuse * dot(-cbFrame.lightDir, norm);
   float3 V = reflect(cbFrame.lightDir, norm);
   float3 toEye = normalize(cbFrame.eye - input.worldPosition);

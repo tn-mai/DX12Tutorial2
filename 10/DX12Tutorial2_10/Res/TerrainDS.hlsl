@@ -99,8 +99,8 @@ DS_OUTPUT main(
     domain.y);
 
   if ((input.skirt >= 5) || (input.skirt > 0 && domain.y == 1)) {
-    const float h = HeightMap(output.worldPosition.xy / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
-    output.worldPosition.z = h * cbTerrain.scale;
+    const float h = HeightMap(output.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
+    output.worldPosition.y = h * cbTerrain.scale;
   }
   output.vPosition =  mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
   return output;

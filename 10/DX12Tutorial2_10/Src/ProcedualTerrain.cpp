@@ -50,11 +50,11 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   Vertex* pVertex = static_cast<Vertex*>(vertexBufferAddress);
 
   // 四角形を等分した頂点データを作成する.
-  const XMVECTORF32 factor = { 100.0f / static_cast<float>(width - 1), 100.0f / static_cast<float>(height - 1), 1, 1 };
-  const XMVECTORF32 offset = { -50, -50, 0, 0 };
-  for (size_t y = 0; y < height; ++y) {
+  const XMVECTORF32 factor = { 100.0f / static_cast<float>(width - 1), 1, 100.0f / static_cast<float>(height - 1), 1 };
+  const XMVECTORF32 offset = { -50, 0, -50, 0 };
+  for (size_t z = 0; z < height; ++z) {
     for (size_t x = 0; x < width; ++x) {
-      const XMVECTORF32 ipos = { static_cast<float>(x), static_cast<float>(y), 10, 1 };
+      const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
       const XMVECTOR pos = ipos * factor + offset;
       XMStoreFloat3(&pVertex->position, pos);
       pVertex->skirt = 5;
@@ -63,28 +63,28 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   }
   // コントロールポイントを作成する.
   for (size_t x = 0; x < width; ++x) {
-    const XMVECTORF32 ipos = { static_cast<float>(x), 0, -10, 1 };
+    const XMVECTORF32 ipos = { static_cast<float>(x), -10, 0, 1 };
     const XMVECTOR pos = ipos * factor + offset;
     XMStoreFloat3(&pVertex->position, pos);
     pVertex->skirt = 1;
     ++pVertex;
   }
   for (size_t x = 0; x < width; ++x) {
-    const XMVECTORF32 ipos = { static_cast<float>(x), static_cast<float>(height - 1), -10, 1 };
+    const XMVECTORF32 ipos = { static_cast<float>(x), -10, static_cast<float>(height - 1), 1 };
     const XMVECTOR pos = ipos * factor + offset;
     XMStoreFloat3(&pVertex->position, pos);
     pVertex->skirt = 2;
     ++pVertex;
   }
-  for (size_t y = 0; y < height; ++y) {
-    const XMVECTORF32 ipos = { 0, static_cast<float>(y), -10, 1 };
+  for (size_t z = 0; z < height; ++z) {
+    const XMVECTORF32 ipos = { 0, -10, static_cast<float>(z), 1 };
     const XMVECTOR pos = ipos * factor + offset;
     XMStoreFloat3(&pVertex->position, pos);
     pVertex->skirt = 3;
     ++pVertex;
   }
-  for (size_t y = 0; y < height; ++y) {
-    const XMVECTORF32 ipos = { static_cast<float>(width - 1), static_cast<float>(y), -10, 1 };
+  for (size_t z = 0; z < height; ++z) {
+    const XMVECTORF32 ipos = { static_cast<float>(width - 1), -10, static_cast<float>(z), 1 };
     const XMVECTOR pos = ipos * factor + offset;
     XMStoreFloat3(&pVertex->position, pos);
     pVertex->skirt = 4;
@@ -113,12 +113,12 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
     return false;
   }
   uint16_t* pIndexBuffer = static_cast<uint16_t*>(indexBufferAddress);
-  for (size_t y = 0; y < height - 1; ++y) {
+  for (size_t z = 0; z < height - 1; ++z) {
     for (size_t x = 0; x < width - 1; ++x) {
-      pIndexBuffer[0] = static_cast<uint16_t>(x + y * width);
-      pIndexBuffer[1] = static_cast<uint16_t>((x + 1) + y * width);
-      pIndexBuffer[2] = static_cast<uint16_t>(x + (y + 1) * width);
-      pIndexBuffer[3] = static_cast<uint16_t>((x + 1) + (y + 1) * width);
+      pIndexBuffer[0] = static_cast<uint16_t>(x + z * width);
+      pIndexBuffer[1] = static_cast<uint16_t>((x + 1) + z * width);
+      pIndexBuffer[2] = static_cast<uint16_t>(x + (z + 1) * width);
+      pIndexBuffer[3] = static_cast<uint16_t>((x + 1) + (z + 1) * width);
 	  pIndexBuffer += 4;
     }
   }
@@ -144,22 +144,22 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
     }
   }
   ++iVertex;
-  for (uint16_t y = 0; y < height - 1; ++y) {
+  for (uint16_t z = 0; z < height - 1; ++z) {
     pIndexBuffer[0] = iVertex + 1;
     pIndexBuffer[1] = iVertex;
-    pIndexBuffer[2] = (y + 1) * width;
-    pIndexBuffer[3] = y * width;
+    pIndexBuffer[2] = (z + 1) * width;
+    pIndexBuffer[3] = z * width;
     pIndexBuffer += 4;
     ++iVertex;
   }
   ++iVertex;
   {
     const uint16_t offset = static_cast<uint16_t>(width * (height - 1));
-    for (uint16_t y = 0; y < width - 1; ++y) {
+    for (uint16_t z = 0; z < width - 1; ++z) {
       pIndexBuffer[0] = iVertex;
       pIndexBuffer[1] = iVertex + 1;
-      pIndexBuffer[2] = y * width + height - 1;
-      pIndexBuffer[3] = (y + 1) * width + height - 1;
+      pIndexBuffer[2] = z * width + height - 1;
+      pIndexBuffer[3] = (z + 1) * width + height - 1;
       pIndexBuffer += 4;
       ++iVertex;
     }
@@ -226,19 +226,17 @@ void ProcedualTerrain::Update()
 	const XMMATRIX matEye = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
 	const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
 	const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEye);
-	const XMMATRIX matModel = XMMatrixRotationX(3.1415926f * 0.5f) * XMMatrixScaling(1.0f, 1.0f, 1.0f);
-	const XMMATRIX matModelInv = XMMatrixInverse(nullptr, matModel);
 	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, XMVECTOR{ 0, 0, 0, 1 }, eyeUp);
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
-	XMStoreFloat3(&constant.cbFrame.eye, XMVector4Transform(eyePos, matModelInv));
-	XMStoreFloat3(&constant.cbFrame.lightDir, XMVector4Transform(XMVECTOR{1.0f / 1.41421356f, 1.0f / 1.41421356f, 0, 1}, matModelInv));
+	XMStoreFloat3(&constant.cbFrame.eye, eyePos);
+	XMStoreFloat3(&constant.cbFrame.lightDir, XMVECTOR{1.0f / 1.41421356f, -1.0f / 1.41421356f, 0, 1});
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
     static float base = 0;
     base -= 0.01f;
 	constant.cbTerrain = { 25, 100, 100, base };
-	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matModel * matView * matProjection));
+	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 
 /**
