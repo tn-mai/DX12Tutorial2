@@ -149,9 +149,9 @@ void ProcedualTerrain::Update()
 		rotEye.x += 2.0f / 180.0f * 3.1415926f;
 	}
 #endif
+    const float limitOffsetZ = 100.0f / static_cast<float>(height - 1);
     static float offsetZ = 0;
     static float base = 0;
-    const float limitOffsetZ = 100.0f / static_cast<float>(height - 1);
     offsetZ += 0.1f;
     if (offsetZ >= limitOffsetZ) {
       offsetZ -= limitOffsetZ;
@@ -159,10 +159,11 @@ void ProcedualTerrain::Update()
     }
     Graphics::Graphics& graphics = Graphics::Graphics::Get();
 	ConstantBuffer& constant = *pConstantBuffer;
-	const XMMATRIX matEye = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y) * XMMatrixTranslation(0, 0, offsetZ);
-	const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -70, 1 }, matEye);
+	const XMMATRIX matEyeRot = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
+    const XMMATRIX matEye = matEyeRot * XMMatrixTranslation(0, 0, offsetZ - limitOffsetZ);
+    const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -70, 1 }, matEye);
     const XMVECTOR eyeForcus = XMVector4Transform(XMVECTOR{ 0, 0, 0, 1 }, matEye);
-    const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEye);
+    const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEyeRot);
 	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, eyeForcus, eyeUp);
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
 	XMStoreFloat3(&constant.cbFrame.eye, eyePos);
