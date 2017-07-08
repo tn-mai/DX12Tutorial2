@@ -25,13 +25,20 @@ cbuffer Constant : register(b0)
   PerFrameData cbFrame;
 }
 
+static const uint COLORID_GRASS = 0;
+static const uint COLORID_SNOW = 1;
+static const uint COLORID_SOIL = 2;
+static const uint COLORID_ROCK = 3;
+static const uint COLORID_WATER = 4;
+static const uint COLORID_BEACH = 5;
+
 static const float3 colors[] = {
-  { 0.35f, 0.5f, 0.18f },
-  { 0.89f, 0.89f, 0.89f },
-  { 0.31f, 0.25f, 0.2f },
-  { 0.39f, 0.37f, 0.38f },
-  { 0.1f, 0.2f, 0.89f },
-  { 0.8f, 0.89f, 0.89f }
+  { 0.35f, 0.5f, 0.18f }, // óŒ
+  { 0.89f, 0.89f, 0.89f }, // îí
+  { 0.31f, 0.25f, 0.2f }, // íÉêF
+  { 0.39f, 0.37f, 0.38f }, // äDêF
+  { 0.1f, 0.2f, 0.89f }, // ê¬
+  { 0.8f, 0.89f, 0.89f } // êÖêF
 };
 
 struct DS_OUTPUT
@@ -144,21 +151,21 @@ float3 GetColorBySlope(float slope, float height) {
   float3 c;
   if (slope < 0.6f) {
     float blend = slope * (1.0 / 0.6);
-    float3 c1 = GetColorByHeight(height, 0, 3, 1);
-    float3 c2 = GetColorByHeight(height, 2, 3, 3);
+    float3 c1 = GetColorByHeight(height, COLORID_GRASS, COLORID_ROCK, COLORID_SNOW);
+    float3 c2 = GetColorByHeight(height, COLORID_SOIL, COLORID_ROCK, COLORID_ROCK);
     c = lerp(c1, c2, blend);
   } else if (slope < 0.65f) {
     float blend = (slope - 0.6f) * (1.0f / (0.65f - 0.6f));
-    float3 c1 = GetColorByHeight(height, 2, 3, 3);
-    float3 c2 = colors[3];
+    float3 c1 = GetColorByHeight(height, COLORID_SOIL, COLORID_ROCK, COLORID_ROCK);
+    float3 c2 = colors[COLORID_ROCK];
     c = lerp(c1, c2, blend);
   } else {
-    c = colors[3];
+    c = colors[COLORID_ROCK];
   }
 #if 1
   const float threshould = 0.05 * cbTerrain.scale;
   if (height < threshould) {
-    c = lerp(c, colors[4], (threshould - height) * 20 / cbTerrain.scale);
+    c = lerp(c, colors[COLORID_WATER], (threshould - height) * 20 / cbTerrain.scale);
   }
 #endif
   return c;
