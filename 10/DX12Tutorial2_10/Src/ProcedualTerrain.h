@@ -3,6 +3,7 @@
 */
 #ifndef DX12TUTORIAL_PROCEDUALTERRAIN_H_
 #define DX12TUTORIAL_PROCEDUALTERRAIN_H_
+#include "Texture.h"
 #include <d3d12.h>
 #include <wrl/client.h>
 #include <stdint.h>
@@ -64,6 +65,7 @@ private:
   D3D12_CPU_DESCRIPTOR_HANDLE cbCPUAddress;
   D3D12_GPU_DESCRIPTOR_HANDLE cbGPUAddress;
   ConstantBuffer* pConstantBuffer = nullptr;
+  Resource::Texture texTerrain;
   DirectX::XMFLOAT2 rotEye;
 };
 

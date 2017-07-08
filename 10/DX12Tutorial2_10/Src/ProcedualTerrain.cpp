@@ -121,6 +121,16 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   cbCPUAddress = CD3DX12_CPU_DESCRIPTOR_HANDLE(csuDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 10, handleSize);
   device->CreateConstantBufferView(&constantBufferView, cbCPUAddress);
 
+  Graphics::Graphics& graphics = Graphics::Graphics::Get();
+  Resource::ResourceLoader loader;
+  loader.Begin(graphics.csuDescriptorHeap);
+  if (!loader.LoadFromFile(texTerrain, 11, L"Res/Terrain.png")) {
+    return false;
+  }
+  ID3D12CommandList* ppCommandLists[] = { loader.End() };
+  graphics.commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+  graphics.WaitForGpu();
+
   rotEye = { 3.14159265f / 3.0f, 0 };
 
   return true;
@@ -187,12 +197,12 @@ void ProcedualTerrain::Draw(ID3D12GraphicsCommandList* commandList, uint32_t cbT
   const PSO& pso = GetPSO(PSOType_Terrain);
   commandList->SetGraphicsRootSignature(pso.rootSignature.Get());
   commandList->SetPipelineState(pso.pso.Get());
-  ID3D12DescriptorHeap* heapList[] = { graphics.csuDescriptorHeap.Get() };
-  commandList->SetDescriptorHeaps(_countof(heapList), heapList);
   commandList->RSSetViewports(1, &graphics.viewport);
   commandList->RSSetScissorRects(1, &graphics.scissorRect);
-
-  commandList->SetGraphicsRootDescriptorTable(cbTableIndex, cbGPUAddress);
+  ID3D12DescriptorHeap* heapList[] = { graphics.csuDescriptorHeap.Get() };
+  commandList->SetDescriptorHeaps(_countof(heapList), heapList);
+  commandList->SetGraphicsRootDescriptorTable(0, texTerrain.handle);
+  commandList->SetGraphicsRootDescriptorTable(1, cbGPUAddress);
   commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
   commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
   commandList->IASetIndexBuffer(&indexBufferView);

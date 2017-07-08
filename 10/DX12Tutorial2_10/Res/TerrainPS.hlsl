@@ -2,6 +2,9 @@
 * @file TerrainPS.hlsl
 */
 
+Texture2D texTerrain : register(t0);
+SamplerState sampler0 : register(s0);
+
 struct TerrainData
 {
   float2 reciprocalSize;
@@ -24,22 +27,6 @@ cbuffer Constant : register(b0)
   TerrainData cbTerrain;
   PerFrameData cbFrame;
 }
-
-static const uint COLORID_GRASS = 0;
-static const uint COLORID_SNOW = 1;
-static const uint COLORID_SOIL = 2;
-static const uint COLORID_ROCK = 3;
-static const uint COLORID_WATER = 4;
-static const uint COLORID_BEACH = 5;
-
-static const float3 colors[] = {
-  { 0.35f, 0.5f, 0.18f }, // óŒ
-  { 0.89f, 0.89f, 0.89f }, // îí
-  { 0.31f, 0.25f, 0.2f }, // íÉêF
-  { 0.39f, 0.37f, 0.38f }, // äDêF
-  { 0.1f, 0.2f, 0.89f }, // ê¬
-  { 0.8f, 0.89f, 0.89f } // êÖêF
-};
 
 struct DS_OUTPUT
 {
@@ -72,7 +59,7 @@ float HeightMap(float2 texcoord)
   float value = Noise(texcoord * freq) * 0.5; freq *= 2.01;
   value += Noise(texcoord * freq) * 0.25; freq *= 2.02;
   value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
-  //  value += Noise(texcoord * freq) * 0.0625;
+  value += Noise(texcoord * freq) * 0.0625;
   return max(0, 1 - value * 2);
 }
 
@@ -122,62 +109,13 @@ float3 EstimateNormal(float2 texcoord)
 #endif
 }
 
-float3 GetColorByHeight(float height, float low, float med, float high) {
-  float bounds = cbTerrain.scale * 0.005f;
-  float transition = cbTerrain.scale * 0.6f;
-  float lowBlendStart = transition - 2 * bounds;
-  float highBlendEnd = transition + 2 * bounds;
-  float3 c;
-
-  if (height < lowBlendStart) {
-    c = colors[low];
-  } else if (height < transition) {
-    float3 c1 = colors[low];
-    float3 c2 = colors[med];
-    float blend = (height - lowBlendStart) * (1.0f / (transition - lowBlendStart));
-    c = lerp(c1, c2, blend);
-  } else if (height < highBlendEnd) {
-    float3 c1 = colors[med];
-    float3 c2 = colors[high];
-    float blend = (height - transition) * (1.0f / (highBlendEnd - transition));
-    c = lerp(c1, c2, blend);
-  } else {
-    c = colors[high];
-  }
-  return c;
-}
-
-float3 GetColorBySlope(float slope, float height) {
-  float3 c;
-  if (slope < 0.6f) {
-    float blend = slope * (1.0 / 0.6);
-    float3 c1 = GetColorByHeight(height, COLORID_GRASS, COLORID_ROCK, COLORID_SNOW);
-    float3 c2 = GetColorByHeight(height, COLORID_SOIL, COLORID_ROCK, COLORID_ROCK);
-    c = lerp(c1, c2, blend);
-  } else if (slope < 0.65f) {
-    float blend = (slope - 0.6f) * (1.0f / (0.65f - 0.6f));
-    float3 c1 = GetColorByHeight(height, COLORID_SOIL, COLORID_ROCK, COLORID_ROCK);
-    float3 c2 = colors[COLORID_ROCK];
-    c = lerp(c1, c2, blend);
-  } else {
-    c = colors[COLORID_ROCK];
-  }
-#if 1
-  const float threshould = 0.05 * cbTerrain.scale;
-  if (height < threshould) {
-    c = lerp(c, colors[COLORID_WATER], (threshould - height) * 20 / cbTerrain.scale);
-  }
-#endif
-  return c;
-}
-
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
   float3 norm = EstimateNormal((input.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize);
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
-  float3 color = GetColorBySlope(acos(norm.y), input.worldPosition.y);
+  float3 color = texTerrain.Sample(sampler0, float2(input.worldPosition.y / cbTerrain.scale, acos(norm.y))).xyz;
   float3 diffuse = cbFrame.lightDiffuse * dot(-cbFrame.lightDir, norm);
   float3 V = reflect(cbFrame.lightDir, norm);
   float3 toEye = normalize(cbFrame.eye - input.worldPosition);
