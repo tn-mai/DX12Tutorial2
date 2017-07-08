@@ -64,12 +64,6 @@ float Noise(float2 st)
   return dot(abcd.xyzw, ratio.xyxy);
 }
 
-float Voronoi(float2 st)
-{
-  const float2 i = floor(st);
-  const float2 f = frac(st);
-}
-
 float HeightMap(float2 texcoord)
 {
 //  y += sin(x*frequency*3.1122+ t*4.269)*2.5;
