@@ -166,7 +166,7 @@ float3 GetColorBySlope(float slope, float height) {
 
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
-  float3 norm = EstimateNormal(input.worldPosition.xz * cbTerrain.reciprocalSize + float2(0, cbTerrain.base));
+  float3 norm = EstimateNormal((input.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize);
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
