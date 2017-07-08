@@ -164,11 +164,27 @@ bool MainGameScene::Load(::Scene::Context&)
   XMVECTORF32 color = { 1, 1, 1, 1 };
   const XMVECTORF32 colorFactor = { 0.95f, 0.95f, 0.95f, 1 };
   for (const char c : start) {
+    if (c == '\0') {
+      break;
+    }
     spriteList.push_back(Sprite::Sprite(pos));
     spriteList.back().animeController.SetCellIndex(c);
     color.v *= colorFactor;
     XMStoreFloat4(&spriteList.back().color, color);
     pos.x += 16;
+  }
+
+  {
+    const char fps[] = "FPS:00.0";
+    XMFLOAT3 pos(16.0f, 32.0f, 0.0f);
+    for (const char c : fps) {
+      if (c == '\0') {
+        break;
+      }
+      spriteListFps.push_back(Sprite::Sprite(pos));
+      spriteListFps.back().animeController.SetCellIndex(c);
+      pos.x += 16;
+    }
   }
 
   static const XMFLOAT2 lt(-16, -16), rb(16, 16);
@@ -241,6 +257,14 @@ int MainGameScene::Update(::Scene::Context&, double delta)
     scoreTmp /= 10;
   }
 
+  {
+    uint32_t fps = static_cast<uint32_t>(Graphics::Graphics::Get().fps * 10);
+    auto itr = spriteListFps.end() - 1;
+    itr->animeController.SetCellIndex('0' + (fps % 10));
+    (itr - 2)->animeController.SetCellIndex('0' + ((fps / 10) % 10));
+    (itr - 3)->animeController.SetCellIndex('0' + ((fps / 100) % 10));
+  }
+
   terrain.Update();
 
   if (producer.IsFinish()) {
@@ -277,6 +301,7 @@ void MainGameScene::Draw(Graphics::Graphics& graphics) const
 //  graphics.spriteRenderer.Draw(p + 0, p + 1, cellList[0].list.data(), bundleId[TexId_BackGround], spriteRenderingInfo);
   graphics.spriteRenderer.Draw(world.Begin(), world.End(), cellList[1].list.data(), bundleId[TexId_Objects], spriteRenderingInfo);
   graphics.spriteRenderer.Draw(p + 1, p + end, cellList[0].list.data(), bundleId[TexId_Font], spriteRenderingInfo);
+  graphics.spriteRenderer.Draw(spriteListFps.begin(), spriteListFps.end(), cellList[0].list.data(), bundleId[TexId_Font], spriteRenderingInfo);
 }
 
 }

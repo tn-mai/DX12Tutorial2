@@ -82,6 +82,8 @@ public:
 	Sprite::Renderer spriteRenderer;
 
 	float clearColor[4] = { 0.0f, 0.2f, 0.4f, 1.0f };
+
+    float fps = 0;
 private:
 	Graphics() = default;
 	Graphics(const Graphics&) = delete;

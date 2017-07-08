@@ -59,6 +59,7 @@ private:
 	AnimationFile anmObjects;
 	Action::B::PatternList ptnList;
 	std::vector<Sprite::Sprite> spriteList;
+    std::vector<Sprite::Sprite> spriteListFps;
 
 	double time = 0;
 	double clearTime = 0;

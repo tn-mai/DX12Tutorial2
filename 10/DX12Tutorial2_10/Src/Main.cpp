@@ -186,6 +186,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		if (msg.message == WM_QUIT) {
 			break;
 		}
+        Graphics::Graphics::Get().fps = timer.GetFPS();
 		Update(timer.GetFrameDelta());
 		if (!Audio::Engine::Get().Update()) {
 			break;
