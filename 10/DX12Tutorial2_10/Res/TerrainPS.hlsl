@@ -32,6 +32,8 @@ struct DS_OUTPUT
 {
   float4 vPosition  : SV_POSITION;
   float3 worldPosition : WORLDPOS;
+  float4 height4 : HEIGHT;
+  float2 texcoord : TEXCOORD;
 };
 
 float4 Random4(float2 st)
@@ -56,11 +58,14 @@ float Noise(float2 st)
 float HeightMap(float2 texcoord)
 {
   float freq = 6.0;
-  float value = Noise(texcoord * freq) * 0.5; freq *= 2.01;
-  value += Noise(texcoord * freq) * 0.25; freq *= 2.02;
+  float value = 0;
+  //value += Noise(texcoord * freq) * 0.5;
+  freq *= 2.01;
+  //value += Noise(texcoord * freq) * 0.25;
+  freq *= 2.02;
   value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
   value += Noise(texcoord * freq) * 0.0625;
-  return max(0, 1 - value * 2);
+  return value;
 }
 
 float3 EstimateNormal(float2 texcoord)
@@ -109,9 +114,23 @@ float3 EstimateNormal(float2 texcoord)
 #endif
 }
 
+float3 EstimateNormalXYZ(float2 texcoord, float4 height4)
+{
+  const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
+  float4 h4;
+  h4.x = HeightMap(texcoord + float2(0, offset.y));
+  h4.y = HeightMap(texcoord + float2(0, -offset.y));
+  h4.z = HeightMap(texcoord + float2(offset.x, 0));
+  h4.w = HeightMap(texcoord + float2(-offset.x, 0));
+  h4 += height4;
+  h4 = max(0, 1 - h4 * 2) * cbTerrain.scale;
+  h4.xz -= h4.yw;
+  return normalize(float3(h4.x, 4, h4.z));
+}
+
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
-  float3 norm = EstimateNormal((input.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize);
+  float3 norm = EstimateNormalXYZ(input.texcoord, input.height4);
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);

@@ -29,12 +29,14 @@ cbuffer Constant : register(b0)
 struct VS_OUTPUT
 {
   float3 worldPosition : WORLDPOS;
+  float4 height4 : HEIGHT;
 };
 
 // 出力制御点
 struct HS_CONTROL_POINT_OUTPUT
 {
   float3 worldPosition : WORLDPOS;
+  float4 height4 : HEIGHT;
 };
 
 // 出力パッチ定数データ。
@@ -93,5 +95,6 @@ HS_CONTROL_POINT_OUTPUT main(
 {
   HS_CONTROL_POINT_OUTPUT output;
   output.worldPosition = ip[i].worldPosition;
+  output.height4 = ip[i].height4;
   return output;
 }

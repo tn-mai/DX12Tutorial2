@@ -29,6 +29,7 @@ cbuffer Constant : register(b0)
 struct HS_CONTROL_POINT_OUTPUT
 {
   float3 worldPosition : WORLDPOS;
+  float4 height4: HEIGHT;
 };
 
 // 入力パッチ定数データ。
@@ -43,6 +44,8 @@ struct DS_OUTPUT
 {
   float4 vPosition  : SV_POSITION;
   float3 worldPosition : WORLDPOS;
+  float4 height4 : HEIGHT;
+  float2 texcoord : TEXCOORD;
 };
 
 float4 Random4(float2 st)
@@ -68,12 +71,24 @@ float HeightMap(float2 texcoord)
 {
 //  y += sin(x*frequency*3.1122+ t*4.269)*2.5;
   float freq = 6.0;
-  float value = Noise(texcoord * freq) * 0.5; freq *= 2.01;
-  value += Noise(texcoord * freq) * 0.25; freq *= 2.02;
-  value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
-//  value += Noise(texcoord * freq) * 0.0625;
-//  return abs(value * 2 - 1);
-  return max(0, 1 - value * 2);
+  float value = 0;
+  //value += Noise(texcoord * freq) * 0.5;
+  freq *= 2.01;
+  value += Noise(texcoord * freq) * 0.25;
+  freq *= 2.02;
+  //value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
+  //value += Noise(texcoord * freq) * 0.0625;
+  return value;
+}
+
+float2 EstimateNormalXZ(float2 texcoord)
+{
+  const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
+  const float u = HeightMap(texcoord + float2(0, offset.y));
+  const float d = HeightMap(texcoord + float2(0, -offset.y));
+  const float r = HeightMap(texcoord + float2(offset.x, 0));
+  const float l = HeightMap(texcoord + float2(-offset.x, 0));
+  return float2(u - d, r - l);
 }
 
 #define NUM_CONTROL_POINTS 4
@@ -89,9 +104,19 @@ DS_OUTPUT main(
     lerp(patch[0].worldPosition, patch[1].worldPosition, domain.x),
     lerp(patch[2].worldPosition, patch[3].worldPosition, domain.x),
     domain.y);
-
-  const float h = HeightMap((output.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize);
-  output.worldPosition.y = h * cbTerrain.scale;
+  output.texcoord = (output.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize;
+  const float h = HeightMap(output.texcoord);
+  output.worldPosition.y = max(0, 1 - (output.worldPosition.y + h) * 2) * cbTerrain.scale;
   output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
+
+  output.height4 = lerp(
+    lerp(patch[0].height4, patch[1].height4, domain.x),
+    lerp(patch[2].height4, patch[3].height4, domain.x),
+    domain.y);
+  const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
+  output.height4.x += HeightMap(output.texcoord + float2(0, offset.y));
+  output.height4.y += HeightMap(output.texcoord + float2(0, -offset.y));
+  output.height4.z += HeightMap(output.texcoord + float2(offset.x, 0));
+  output.height4.w += HeightMap(output.texcoord + float2(-offset.x, 0));
   return output;
 }
