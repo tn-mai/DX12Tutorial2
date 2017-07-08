@@ -143,7 +143,7 @@ float3 GetColorByHeight(float height, float low, float med, float high) {
 float3 GetColorBySlope(float slope, float height) {
   float3 c;
   if (slope < 0.6f) {
-    float blend = slope / 0.6f;
+    float blend = slope * (1.0 / 0.6);
     float3 c1 = GetColorByHeight(height, 0, 3, 1);
     float3 c2 = GetColorByHeight(height, 2, 3, 3);
     c = lerp(c1, c2, blend);
