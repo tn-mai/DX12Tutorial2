@@ -41,7 +41,7 @@ bool CreatePSO(PSO& pso, ID3D12Device* device, bool warp, const wchar_t* vs, con
 bool LoadShader(const wchar_t* filename, const char* target, ID3DBlob** blob)
 {
 	ComPtr<ID3DBlob> errorBuffer;
-	if (FAILED(D3DCompileFromFile(filename, nullptr, nullptr, "main", target, D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, blob, &errorBuffer))) {
+	if (FAILED(D3DCompileFromFile(filename, nullptr, nullptr, "main", target, true ? D3DCOMPILE_OPTIMIZATION_LEVEL3 : D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, blob, &errorBuffer))) {
 		if (errorBuffer) {
 			OutputDebugStringA(static_cast<char*>(errorBuffer->GetBufferPointer()));
 		}
