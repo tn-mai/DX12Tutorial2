@@ -171,7 +171,7 @@ void ProcedualTerrain::Update()
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
-	constant.cbTerrain = { 25, 100, 100, base };
+	constant.cbTerrain = { XMFLOAT2(1.0f / 100.0f, 1.0f / 100.0f), 25, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 

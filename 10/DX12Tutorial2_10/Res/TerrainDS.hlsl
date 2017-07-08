@@ -4,9 +4,8 @@
 
 struct TerrainData
 {
+  float2 reciprocalSize;
   float scale;
-  float width;
-  float depth;
   float base;
 };
 
@@ -97,7 +96,7 @@ DS_OUTPUT main(
     lerp(patch[2].worldPosition, patch[3].worldPosition, domain.x),
     domain.y);
 
-  const float h = HeightMap(output.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
+  const float h = HeightMap(output.worldPosition.xz * cbTerrain.reciprocalSize + float2(0, cbTerrain.base));
   output.worldPosition.y = h * cbTerrain.scale;
   output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
   return output;

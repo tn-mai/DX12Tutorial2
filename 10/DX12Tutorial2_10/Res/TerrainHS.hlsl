@@ -4,9 +4,8 @@
 
 struct TerrainData
 {
+  float2 reciprocalSize;
   float scale;
-  float width;
-  float depth;
   float base;
 };
 
@@ -72,12 +71,12 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
   output.EdgeTessFactor[3] = CalcTessFactor(e3);
   output.InsideTessFactor[0] = output.InsideTessFactor[1] = CalcTessFactor(center);
 #else
-  output.EdgeTessFactor[0] = 4.0f;
-  output.EdgeTessFactor[1] = 4.0f;
-  output.EdgeTessFactor[2] = 4.0f;
-  output.EdgeTessFactor[3] = 4.0f;
-  output.InsideTessFactor[0] = 4.0f;
-  output.InsideTessFactor[1] = 4.0f;
+  output.EdgeTessFactor[0] = 6.0f;
+  output.EdgeTessFactor[1] = 6.0f;
+  output.EdgeTessFactor[2] = 6.0f;
+  output.EdgeTessFactor[3] = 6.0f;
+  output.InsideTessFactor[0] = 6.0f;
+  output.InsideTessFactor[1] = 6.0f;
 #endif
   return output;
 }

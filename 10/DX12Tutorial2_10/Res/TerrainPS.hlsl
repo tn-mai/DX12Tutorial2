@@ -4,9 +4,8 @@
 
 struct TerrainData
 {
+  float2 reciprocalSize;
   float scale;
-  float width;
-  float depth;
   float base;
 };
 
@@ -72,7 +71,22 @@ float HeightMap(float2 texcoord)
 
 float3 EstimateNormal(float2 texcoord)
 {
-  const float2 invWH = float2(0.3f, 0.3f) / float2(cbTerrain.width, cbTerrain.depth);
+#if 0
+  texcoord *= 6.0 * 2.01 * 2.02 * 2.03 * 2.01;
+  const float2 i = floor(texcoord);
+  const float2 f = frac(texcoord);
+  const float4 ff = saturate(f.xyxy + float2(-0.05, 0.05).xxyy);
+  const float4 ratio = ff * ff * (3.0 - 2.0 * ff);
+  const float4 oneMinusRatio = 1.0 - ratio;
+  const float4 abcd = max(0, 1 - Random4(i) * 0.03125 * 2);
+
+  float4 tmp = lerp(abcd.xxzz, abcd.yyww, ratio.xzxz);
+  tmp = lerp(tmp.xyxy, tmp.zwzw, ratio.yyww);
+  tmp = tmp.yxxz + tmp.wzyz;
+  float2 slope = tmp.xz - tmp.yw;
+  return float3(slope.x, 0, slope.y) * cbTerrain.scale;
+#else
+  const float2 invWH = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
 //  float2 b = texcoord + float2(    0.0f, -invWH.y);
   float2 c = texcoord + float2( invWH.x, -invWH.y);
 //  float2 d = texcoord + float2( invWH.x,     0.0f);
@@ -98,6 +112,7 @@ float3 EstimateNormal(float2 texcoord)
   float y = 4.0f;
 
   return normalize(float3(x, y, z));
+#endif
 }
 
 float3 GetColorByHeight(float height, float low, float med, float high) {
@@ -151,7 +166,7 @@ float3 GetColorBySlope(float slope, float height) {
 
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
-  float3 norm = EstimateNormal(input.worldPosition.xz / float2(cbTerrain.width, cbTerrain.depth) + float2(0, cbTerrain.base));
+  float3 norm = EstimateNormal(input.worldPosition.xz * cbTerrain.reciprocalSize + float2(0, cbTerrain.base));
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
