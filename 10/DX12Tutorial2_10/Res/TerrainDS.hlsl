@@ -6,6 +6,7 @@ struct TerrainData
 {
   float2 reciprocalSize;
   float scale;
+  float reciprocalScale;
   float base;
 };
 

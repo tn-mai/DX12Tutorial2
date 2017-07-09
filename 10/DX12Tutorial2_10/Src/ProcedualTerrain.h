@@ -41,6 +41,7 @@ private:
     {
       DirectX::XMFLOAT2 reciprocalSize;
       float scale;
+      float reciprocalScale;
       float base;
     };
 
