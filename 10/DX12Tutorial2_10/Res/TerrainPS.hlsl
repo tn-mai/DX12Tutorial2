@@ -63,7 +63,7 @@ float HeightMap(float2 texcoord)
   //value += Noise(texcoord * freq * 2.01) * 0.25;
   //value += Noise(texcoord * freq * 2.01 * 2.02) * 0.125;
   //value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03) * 0.0625;
-  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01) * 0.03125;
+  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01) * 0.03125 * 0.5;
   return value;
 }
 
