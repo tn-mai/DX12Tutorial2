@@ -67,7 +67,6 @@ private:
   D3D12_GPU_DESCRIPTOR_HANDLE cbGPUAddress;
   ConstantBuffer* pConstantBuffer = nullptr;
   Resource::Texture texTerrain;
-  DirectX::XMFLOAT2 rotEye;
   float offsetZ;
   float base;
 };

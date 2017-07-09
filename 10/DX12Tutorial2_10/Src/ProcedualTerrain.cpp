@@ -136,7 +136,6 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   graphics.commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
   graphics.WaitForGpu();
 
-  rotEye = { 75.0f / 180.0f * 3.14159265f, 0 };
   offsetZ = 0;
   base = 0;
 
@@ -153,21 +152,6 @@ void ProcedualTerrain::Update(double delta)
 	if (!pConstantBuffer) {
 		return;
 	}
-#if 0
-	const GamePad& gamepad = GetGamePad(0);
-	if (gamepad.buttons & GamePad::DPAD_LEFT) {
-		rotEye.y -= 2.0f / 180.0f * 3.1415926f;
-	}
-	if (gamepad.buttons & GamePad::DPAD_RIGHT) {
-		rotEye.y += 2.0f / 180.0f * 3.1415926f;
-	}
-	if (gamepad.buttons & GamePad::DPAD_UP) {
-		rotEye.x -= 2.0f / 180.0f * 3.1415926f;
-	}
-	if (gamepad.buttons & GamePad::DPAD_DOWN) {
-		rotEye.x += 2.0f / 180.0f * 3.1415926f;
-	}
-#endif
     const float limitOffsetZ = static_cast<float>(sizeZ) / static_cast<float>(height - 1);
     offsetZ += 4.0f * static_cast<float>(delta);
     if (offsetZ >= limitOffsetZ) {
@@ -177,7 +161,7 @@ void ProcedualTerrain::Update(double delta)
     }
     Graphics::Graphics& graphics = Graphics::Graphics::Get();
 	ConstantBuffer& constant = *pConstantBuffer;
-	const XMMATRIX matEyeRot = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
+	const XMMATRIX matEyeRot = XMMatrixRotationX(75.0f / 180.0f * 3.14159265f);
     const XMMATRIX matEye = matEyeRot * XMMatrixTranslation(0, 0, offsetZ - limitOffsetZ);
     const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
     const XMVECTOR eyeForcus = XMVector4Transform(XMVECTOR{ 0, 0, 0, 1 }, matEye);
