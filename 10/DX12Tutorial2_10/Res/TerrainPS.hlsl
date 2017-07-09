@@ -94,5 +94,5 @@ float4 main(DS_OUTPUT input) : SV_TARGET
   float3 toEye = normalize(cbFrame.eye - input.worldPosition);
   float3 specular = cbFrame.lightSpecular * pow(max(dot(V, toEye), 0.0f), 2.0f);
 
-  return float4(max(diffuse + specular, cbFrame.lightAmbient) * color, 1);
+  return float4((diffuse + specular + cbFrame.lightAmbient) * color, 1);
 }
