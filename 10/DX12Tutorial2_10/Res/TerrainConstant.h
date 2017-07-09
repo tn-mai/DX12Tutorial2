@@ -13,14 +13,19 @@
 #define FLOAT3 DirectX::XMFLOAT3
 #define FLOAT3A DirectX::XMFLOAT3A
 #define FLOAT4X4 DirectX::XMFLOAT4X4A
+#define CBUFFER struct
+#define REGISTER(r)
 #else
 #define FLOAT float
 #define FLOAT2 float2
 #define FLOAT3 float3
 #define FLOAT3A float3
 #define FLOAT4X4 float4x4
+#define CBUFFER cbuffer
+#define REGISTER(r) : register(r)
 #endif // _WIN32
 
+/// 地形用の変化しないデータ.
 struct TerrainData
 {
   FLOAT2 reciprocalSize; ///< sizeX, sizeZの逆数.
@@ -28,6 +33,7 @@ struct TerrainData
   FLOAT reciprocalScale;///< Y方向の拡大率の逆数.
 };
 
+/// 地形用の毎フレーム変化するデータ.
 struct PerFrameData
 {
   FLOAT4X4 matViewProjection; ///< View/Projection行列.
@@ -38,10 +44,19 @@ struct PerFrameData
   float base; ///< ハイトマップの参照位置.
 };
 
+/// 地形用の定数バッファ.
+CBUFFER TerrainConstant REGISTER(b0)
+{
+	TerrainData cbTerrain;
+	PerFrameData cbFrame;
+};
+
 #undef FLOAT
 #undef FLOAT2
 #undef FLOAT3
 #undef FLOAT3A
 #undef FLOAT4X4
+#undef CBUFFER
+#undef REGISTER
 
 #endif // DX12TUTORIAL_RES_TERRAINCONSTANT_H_

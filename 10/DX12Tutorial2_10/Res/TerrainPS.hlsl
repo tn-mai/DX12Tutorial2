@@ -6,12 +6,6 @@
 Texture2D texTerrain : register(t0);
 SamplerState sampler0 : register(s0);
 
-cbuffer Constant : register(b0)
-{
-  TerrainData cbTerrain;
-  PerFrameData cbFrame;
-}
-
 struct DS_OUTPUT
 {
   float4 vPosition  : SV_POSITION;

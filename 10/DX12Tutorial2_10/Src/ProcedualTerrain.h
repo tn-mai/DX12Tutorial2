@@ -33,15 +33,6 @@ public:
   void Draw(ID3D12GraphicsCommandList* commandList, uint32_t cbTableIndex) const;
 
 private:
-  /**
-  * 定数バッファ.
-  */
-  struct ConstantBuffer
-  {
-    TerrainData cbTerrain;
-    PerFrameData cbFrame;
-  };
-
   Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
   D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
   Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
@@ -49,7 +40,7 @@ private:
   Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
   D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferView;
   D3D12_GPU_DESCRIPTOR_HANDLE cbGPUAddress;
-  ConstantBuffer* pConstantBuffer = nullptr;
+  TerrainConstant* pConstantBuffer = nullptr;
   Resource::Texture texTerrain;
   float offsetZ;
   float base;

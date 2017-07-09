@@ -100,7 +100,7 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   indexBufferView.Format = DXGI_FORMAT_R16_UINT;
   indexBufferView.SizeInBytes = indexListSize;
 
-  const size_t constantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;
+  const size_t constantBufferSize = (sizeof(TerrainConstant) + 255) & ~255;
   if (FAILED(device->CreateCommittedResource(
 	  &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 	  D3D12_HEAP_FLAG_NONE,
@@ -116,7 +116,7 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   if (FAILED(constantBuffer->Map(0, &range, &constantBufferAddress))) {
 	  return false;
   }
-  pConstantBuffer = static_cast<ConstantBuffer*>(constantBufferAddress);
+  pConstantBuffer = static_cast<TerrainConstant*>(constantBufferAddress);
   Update(0);
 
   constantBufferView.BufferLocation = constantBuffer->GetGPUVirtualAddress();
@@ -160,7 +160,6 @@ void ProcedualTerrain::Update(double delta)
       base += i * limitOffsetZ;
     }
     Graphics::Graphics& graphics = Graphics::Graphics::Get();
-	ConstantBuffer& constant = *pConstantBuffer;
 	const XMMATRIX matEyeRot = XMMatrixRotationX(75.0f / 180.0f * 3.14159265f);
     const XMMATRIX matEye = matEyeRot * XMMatrixTranslation(0, 0, offsetZ - limitOffsetZ);
     const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
@@ -168,13 +167,13 @@ void ProcedualTerrain::Update(double delta)
     const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEyeRot);
 	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, eyeForcus, eyeUp);
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
-	XMStoreFloat3(&constant.cbFrame.eye, eyePos);
-    XMStoreFloat3(&constant.cbFrame.lightDir, XMVector4Transform(XMVECTOR{0, -1, 0}, XMMatrixRotationRollPitchYaw(XMConvertToRadians(30), XMConvertToRadians(30), 0)));
-	constant.cbFrame.lightDiffuse = XMFLOAT3A(1.0f, 1.0f, 0.95f);
-	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.15f);
-    constant.cbFrame.base = base;
-	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeZ)), 30.0f, 1.0f / 30.0f };
-	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
+	XMStoreFloat3(&pConstantBuffer->cbFrame.eye, eyePos);
+    XMStoreFloat3(&pConstantBuffer->cbFrame.lightDir, XMVector4Transform(XMVECTOR{0, -1, 0}, XMMatrixRotationRollPitchYaw(XMConvertToRadians(30), XMConvertToRadians(30), 0)));
+	pConstantBuffer->cbFrame.lightDiffuse = XMFLOAT3A(1.0f, 1.0f, 0.95f);
+	pConstantBuffer->cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.15f);
+    pConstantBuffer->cbFrame.base = base;
+	pConstantBuffer->cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeZ)), 30.0f, 1.0f / 30.0f };
+	XMStoreFloat4x4A(&pConstantBuffer->cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 
 /**

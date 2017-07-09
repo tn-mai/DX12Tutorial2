@@ -3,12 +3,6 @@
 */
 #include "TerrainConstant.h"
 
-cbuffer Constant : register(b0)
-{
-  TerrainData cbTerrain;
-  PerFrameData cbFrame;
-}
-
 struct VS_OUTPUT
 {
   float3 worldPosition : WORLDPOS;

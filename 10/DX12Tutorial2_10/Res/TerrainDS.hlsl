@@ -3,12 +3,6 @@
 */
 #include "TerrainConstant.h"
 
-cbuffer Constant : register(b0)
-{
-  TerrainData cbTerrain;
-  PerFrameData cbFrame;
-}
-
 // “ü—Í§Œä“_
 struct HS_CONTROL_POINT_OUTPUT
 {
