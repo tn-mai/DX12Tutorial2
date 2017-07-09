@@ -69,26 +69,14 @@ float Noise(float2 st)
 
 float HeightMap(float2 texcoord)
 {
-//  y += sin(x*frequency*3.1122+ t*4.269)*2.5;
-  float freq = 6.0;
+  static const float freq = 3.0;
   float value = 0;
   //value += Noise(texcoord * freq) * 0.5;
-  freq *= 2.01;
-  value += Noise(texcoord * freq) * 0.25;
-  freq *= 2.02;
-  //value += Noise(texcoord * freq) * 0.125; freq *= 2.03;
-  //value += Noise(texcoord * freq) * 0.0625;
+  //value += Noise(texcoord * freq * 2.01) * 0.25;
+  value += Noise(texcoord * freq * 2.01 * 2.02) * 0.125;
+  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03) * 0.0625;
+  //value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01) * 0.03125;
   return value;
-}
-
-float2 EstimateNormalXZ(float2 texcoord)
-{
-  const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
-  const float u = HeightMap(texcoord + float2(0, offset.y));
-  const float d = HeightMap(texcoord + float2(0, -offset.y));
-  const float r = HeightMap(texcoord + float2(offset.x, 0));
-  const float l = HeightMap(texcoord + float2(-offset.x, 0));
-  return float2(u - d, r - l);
 }
 
 #define NUM_CONTROL_POINTS 4
