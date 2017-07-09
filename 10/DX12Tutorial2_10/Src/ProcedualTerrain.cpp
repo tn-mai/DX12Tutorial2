@@ -28,8 +28,13 @@ struct Vertex {
 * @retval true  ‰Šú‰»¬Œ÷.
 * @retval false ‰Šú‰»¸”s.
 */
-bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHeap)
+bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHeap)
 {
+  ComPtr<ID3D12Device> device;
+  if (FAILED(csuDescriptorHeap->GetDevice(IID_PPV_ARGS(&device)))) {
+    return false;
+  }
+
   if (FAILED(device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
     D3D12_HEAP_FLAG_NONE,

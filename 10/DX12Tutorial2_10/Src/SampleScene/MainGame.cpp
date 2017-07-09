@@ -192,7 +192,7 @@ bool MainGameScene::Load(::Scene::Context&)
   pPlayer->rotation = 3.14f;
   pPlayer->SetSeqIndex(AnmSeqId_Player);
 
-  terrain.Init(graphics.device, graphics.csuDescriptorHeap);
+  terrain.Init(graphics.csuDescriptorHeap);
 
   return true;
 }

@@ -27,7 +27,7 @@ public:
   ProcedualTerrain(const ProcedualTerrain&) = default;
   ProcedualTerrain& operator=(const ProcedualTerrain&) = default;
 
-  bool Init(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& csuDescriptorHeap);
+  bool Init(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& csuDescriptorHeap);
   void Update(double delta);
   void Draw(ID3D12GraphicsCommandList* commandList, uint32_t cbTableIndex) const;
 
