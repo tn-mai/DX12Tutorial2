@@ -162,7 +162,7 @@ void ProcedualTerrain::Update()
     const float limitOffsetZ = static_cast<float>(sizeY) / static_cast<float>(height - 1);
     static float offsetZ = 0;
     static float base = 0;
-    offsetZ += 0.1f;
+    offsetZ += 0.25f;
     if (offsetZ >= limitOffsetZ) {
       offsetZ -= limitOffsetZ;
       base += limitOffsetZ;
