@@ -59,4 +59,46 @@ CBUFFER TerrainConstant REGISTER(b0)
 #undef CBUFFER
 #undef REGISTER
 
+#ifndef _WIN32
+
+/// 座標に対応するノイズ値を取得する.
+float Noise(float2 st)
+{
+  const float2 i = floor(st);
+  const float2 f = frac(st);
+  const float2 u = f * f * (3.0f - 2.0f * f);
+  const float2 ratio = { 1.0f - u.x, u.x };
+  const float3 scale = { 12.9898f, 78.233f, 43758.5453123f };
+  const float4 tmp = (i.xyxy + float4(0, 0, 1, 1)) * scale.xyxy;
+  float4 abcd = frac(sin(tmp.xzxz + tmp.yyww) * scale.z);
+  abcd.zw -= abcd.xy;
+  abcd.zw *= u.y;
+  return dot(abcd.xyzw, ratio.xyxy);
+}
+
+/// 座標に対応する高さを取得する.
+float HeightMap(float2 texcoord)
+{
+  const float freq = 3.0;
+  float value = 0;
+#if TERRAIN_NOISE_BEGIN <= 0 && TERRAIN_NOISE_END > 0
+  value += Noise(texcoord * freq) * 0.5;
+#endif
+#if TERRAIN_NOISE_BEGIN <= 1 && TERRAIN_NOISE_END > 1
+  value += Noise(texcoord * freq * 2.01) * 0.25;
+#endif
+#if TERRAIN_NOISE_BEGIN <= 2 && TERRAIN_NOISE_END > 2
+  value += Noise(texcoord * freq * 2.01 * 2.02) * 0.125;
+#endif
+#if TERRAIN_NOISE_BEGIN <= 3 && TERRAIN_NOISE_END > 3
+  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03) * 0.0625;
+#endif
+#if TERRAIN_NOISE_BEGIN <= 4 && TERRAIN_NOISE_END > 4
+  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01) * 0.03125 * 0.5;
+#endif
+  return value;
+}
+
+#endif // _WIN32
+
 #endif // DX12TUTORIAL_RES_TERRAINCONSTANT_H_
