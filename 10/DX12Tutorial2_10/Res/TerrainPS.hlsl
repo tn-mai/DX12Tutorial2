@@ -33,7 +33,7 @@ float3 EstimateNormal(float2 texcoord, float4 height4)
 
 float4 main(DS_OUTPUT input) : SV_TARGET
 {
-  float3 norm = input.worldPosition.y == 0 ? float3(0, 1, 0) : EstimateNormal(input.texcoord, input.height4);
+  float3 norm = EstimateNormal(input.texcoord, input.height4);
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
