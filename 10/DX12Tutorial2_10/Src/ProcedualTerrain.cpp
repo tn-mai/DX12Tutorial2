@@ -123,7 +123,7 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   constantBufferView.SizeInBytes = constantBufferSize;
   const UINT handleSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   cbGPUAddress = CD3DX12_GPU_DESCRIPTOR_HANDLE(csuDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 10, handleSize);
-  cbCPUAddress = CD3DX12_CPU_DESCRIPTOR_HANDLE(csuDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 10, handleSize);
+  const D3D12_CPU_DESCRIPTOR_HANDLE cbCPUAddress = CD3DX12_CPU_DESCRIPTOR_HANDLE(csuDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 10, handleSize);
   device->CreateConstantBufferView(&constantBufferView, cbCPUAddress);
 
   Graphics::Graphics& graphics = Graphics::Graphics::Get();

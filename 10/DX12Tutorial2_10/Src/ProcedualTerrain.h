@@ -64,7 +64,6 @@ private:
   D3D12_INDEX_BUFFER_VIEW indexBufferView;
   Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer;
   D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferView;
-  D3D12_CPU_DESCRIPTOR_HANDLE cbCPUAddress;
   D3D12_GPU_DESCRIPTOR_HANDLE cbGPUAddress;
   ConstantBuffer* pConstantBuffer = nullptr;
   Resource::Texture texTerrain;
