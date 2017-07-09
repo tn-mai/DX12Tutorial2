@@ -7,7 +7,6 @@ struct TerrainData
   float2 reciprocalSize;
   float scale;
   float reciprocalScale;
-  float base;
 };
 
 struct PerFrameData
@@ -17,6 +16,7 @@ struct PerFrameData
   float3 lightDir;
   float3 lightDiffuse;
   float3 lightAmbient;
+  float base;
 };
 
 cbuffer Constant : register(b0)
@@ -92,7 +92,7 @@ DS_OUTPUT main(
     lerp(patch[0].worldPosition, patch[1].worldPosition, domain.x),
     lerp(patch[2].worldPosition, patch[3].worldPosition, domain.x),
     domain.y);
-  output.texcoord = (output.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize;
+  output.texcoord = (output.worldPosition.xz + float2(0, cbFrame.base)) * cbTerrain.reciprocalSize;
   const float h = HeightMap(output.texcoord);
   output.worldPosition.y = max(0, (output.worldPosition.y + h) * 2 * (1.0 / 0.9375) - 1) * cbTerrain.scale;
   output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);

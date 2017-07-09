@@ -188,7 +188,8 @@ void ProcedualTerrain::Update(double delta)
     XMStoreFloat3(&constant.cbFrame.lightDir, XMVector4Transform(XMVECTOR{0, -1, 0}, XMMatrixRotationRollPitchYaw(XMConvertToRadians(30), XMConvertToRadians(30), 0)));
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(1.0f, 1.0f, 0.95f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.15f);
-	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeZ)), 30.0f, 1.0f / 30.0f, base };
+    constant.cbFrame.base = base;
+	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeZ)), 30.0f, 1.0f / 30.0f };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 

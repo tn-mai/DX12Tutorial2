@@ -7,7 +7,6 @@ struct TerrainData
   float2 reciprocalSize;
   float scale;
   float reciprocalScale;
-  float base;
 };
 
 struct PerFrameData
@@ -17,6 +16,7 @@ struct PerFrameData
   float3 lightDir;
   float3 lightDiffuse;
   float3 lightAmbient;
+  float base;
 };
 
 cbuffer Constant : register(b0)
@@ -71,7 +71,7 @@ VS_OUTPUT main(VS_INPUT input)
 {
   VS_OUTPUT output;
   output.worldPosition = input.position;
-  float2 texcoord = (output.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize;
+  float2 texcoord = (output.worldPosition.xz + float2(0, cbFrame.base)) * cbTerrain.reciprocalSize;
   output.worldPosition.y = HeightMap(texcoord);
   const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
   output.height4.x = HeightMap(texcoord + float2(0, offset.y));

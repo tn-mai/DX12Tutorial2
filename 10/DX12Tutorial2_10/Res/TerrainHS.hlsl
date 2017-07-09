@@ -7,7 +7,6 @@ struct TerrainData
   float2 reciprocalSize;
   float scale;
   float reciprocalScale;
-  float base;
 };
 
 struct PerFrameData
@@ -17,6 +16,7 @@ struct PerFrameData
   float3 lightDir;
   float3 lightDiffuse;
   float3 lightAmbient;
+  float base;
 };
 
 cbuffer Constant : register(b0)

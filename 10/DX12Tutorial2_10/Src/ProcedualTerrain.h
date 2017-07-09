@@ -42,7 +42,6 @@ private:
       DirectX::XMFLOAT2 reciprocalSize;
       float scale;
       float reciprocalScale;
-      float base;
     };
 
     struct PerFrameData
@@ -51,7 +50,8 @@ private:
       DirectX::XMFLOAT3A eye;
       DirectX::XMFLOAT3A lightDir;
       DirectX::XMFLOAT3A lightDiffuse;
-      DirectX::XMFLOAT3A lightAmbient;
+      DirectX::XMFLOAT3 lightAmbient;
+      float base;
     };
 
     TerrainData cbTerrain;
