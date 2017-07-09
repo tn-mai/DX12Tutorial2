@@ -16,7 +16,7 @@ class ProcedualTerrain
 {
 public:
   static const size_t sizeX = 100;
-  static const size_t sizeY = 100;
+  static const size_t sizeZ = 100;
   static const size_t width = 8;
   static const size_t height = 8;
   static const size_t vertexCount = width * height;

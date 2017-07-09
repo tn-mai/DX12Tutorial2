@@ -54,8 +54,8 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   Vertex* pVertex = static_cast<Vertex*>(vertexBufferAddress);
 
   // 四角形を等分した頂点データを作成する.
-  const XMVECTORF32 factor = { static_cast<float>(sizeX) / static_cast<float>(width - 1), 1, -static_cast<float>(sizeY) / static_cast<float>(height - 1), 1 };
-  const XMVECTORF32 offset = { -static_cast<float>(sizeX) * 0.5f, 0, static_cast<float>(sizeY) * 0.5f, 0 };
+  const XMVECTORF32 factor = { static_cast<float>(sizeX) / static_cast<float>(width - 1), 1, -static_cast<float>(sizeZ) / static_cast<float>(height - 1), 1 };
+  const XMVECTORF32 offset = { -static_cast<float>(sizeX) * 0.5f, 0, static_cast<float>(sizeZ) * 0.5f, 0 };
   for (size_t z = 0; z < height; ++z) {
     for (size_t x = 0; x < width; ++x) {
       const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
@@ -168,7 +168,7 @@ void ProcedualTerrain::Update(double delta)
 		rotEye.x += 2.0f / 180.0f * 3.1415926f;
 	}
 #endif
-    const float limitOffsetZ = static_cast<float>(sizeY) / static_cast<float>(height - 1);
+    const float limitOffsetZ = static_cast<float>(sizeZ) / static_cast<float>(height - 1);
     offsetZ += 4.0f * static_cast<float>(delta);
     if (offsetZ >= limitOffsetZ) {
       const float i = std::floor(offsetZ * (1.0f / limitOffsetZ));
@@ -188,7 +188,7 @@ void ProcedualTerrain::Update(double delta)
     XMStoreFloat3(&constant.cbFrame.lightDir, XMVector4Transform(XMVECTOR{0, -1, 0}, XMMatrixRotationRollPitchYaw(XMConvertToRadians(30), XMConvertToRadians(30), 0)));
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(1.0f, 1.0f, 0.95f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.15f);
-	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeY)), 30.0f, 1.0f / 30.0f, base };
+	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeZ)), 30.0f, 1.0f / 30.0f, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 
