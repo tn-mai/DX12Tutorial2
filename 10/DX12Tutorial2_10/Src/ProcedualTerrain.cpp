@@ -131,7 +131,7 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   graphics.commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
   graphics.WaitForGpu();
 
-  rotEye = { 3.14159265f / 3.0f, 0 };
+  rotEye = { 75.0f / 180.0f * 3.14159265f, 0 };
 
   return true;
 }
@@ -171,7 +171,7 @@ void ProcedualTerrain::Update()
 	ConstantBuffer& constant = *pConstantBuffer;
 	const XMMATRIX matEyeRot = XMMatrixRotationX(rotEye.x) * XMMatrixRotationY(rotEye.y);
     const XMMATRIX matEye = matEyeRot * XMMatrixTranslation(0, 0, offsetZ - limitOffsetZ);
-    const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -70, 1 }, matEye);
+    const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
     const XMVECTOR eyeForcus = XMVector4Transform(XMVECTOR{ 0, 0, 0, 1 }, matEye);
     const XMVECTOR eyeUp = XMVector4Transform(XMVECTOR{ 0, 1, 0, 1 }, matEyeRot);
 	const XMMATRIX matView = XMMatrixLookAtLH(eyePos, eyeForcus, eyeUp);
