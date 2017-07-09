@@ -178,9 +178,8 @@ void ProcedualTerrain::Update()
 	const XMMATRIX matProjection = XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), graphics.viewport.Width / graphics.viewport.Height, 1.0f, 1000.0f);
 	XMStoreFloat3(&constant.cbFrame.eye, eyePos);
     XMStoreFloat3(&constant.cbFrame.lightDir, XMVector4Transform(XMVECTOR{0, -1, 0}, XMMatrixRotationRollPitchYaw(XMConvertToRadians(30), XMConvertToRadians(30), 0)));
-	constant.cbFrame.lightDiffuse = XMFLOAT3A(0.8f, 0.8f, 0.7f);
-	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
-	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
+	constant.cbFrame.lightDiffuse = XMFLOAT3A(1.0f, 1.0f, 0.95f);
+	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.15f);
 	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeY)), 30.0f, 1.0f / 30.0f, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }

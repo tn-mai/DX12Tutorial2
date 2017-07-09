@@ -51,7 +51,6 @@ private:
       DirectX::XMFLOAT3A eye;
       DirectX::XMFLOAT3A lightDir;
       DirectX::XMFLOAT3A lightDiffuse;
-      DirectX::XMFLOAT3A lightSpecular;
       DirectX::XMFLOAT3A lightAmbient;
     };
 

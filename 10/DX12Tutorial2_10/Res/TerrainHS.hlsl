@@ -16,7 +16,6 @@ struct PerFrameData
   float3 eye;
   float3 lightDir;
   float3 lightDiffuse;
-  float3 lightSpecular;
   float3 lightAmbient;
 };
 
