@@ -37,7 +37,7 @@ float4 main(DS_OUTPUT input) : SV_TARGET
   float3 viewvector = cbFrame.eye - input.worldPosition;
   //float3 color = float1(HeightMap(input.worldPosition.xz * (1.0 / 100.0))).xxx;
   //float3 color = float3(0.8, 0.8, 0.8);
-  float3 color = texTerrain.Sample(sampler0, float2(acos(norm.y) * (1.0 / 3.14159265), input.worldPosition.y * cbTerrain.reciprocalScale)).xyz;
+  float3 color = texTerrain.Sample(sampler0, float2(norm.y, input.worldPosition.y * cbTerrain.reciprocalScale)).xyz;
   float3 diffuse = cbFrame.lightDiffuse * dot(-cbFrame.lightDir, norm);
   return float4((diffuse + cbFrame.lightAmbient) * color, 1);
 }
