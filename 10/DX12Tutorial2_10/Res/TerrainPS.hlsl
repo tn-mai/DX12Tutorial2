@@ -1,26 +1,10 @@
 /**
 * @file TerrainPS.hlsl
 */
+#include "TerrainConstant.h"
 
 Texture2D texTerrain : register(t0);
 SamplerState sampler0 : register(s0);
-
-struct TerrainData
-{
-  float2 reciprocalSize;
-  float scale;
-  float reciprocalScale;
-};
-
-struct PerFrameData
-{
-  float4x4 matViewProjection;
-  float3 eye;
-  float3 lightDir;
-  float3 lightDiffuse;
-  float3 lightAmbient;
-  float base;
-};
 
 cbuffer Constant : register(b0)
 {

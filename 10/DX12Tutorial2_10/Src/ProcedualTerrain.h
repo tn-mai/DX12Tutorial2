@@ -4,6 +4,7 @@
 #ifndef DX12TUTORIAL_PROCEDUALTERRAIN_H_
 #define DX12TUTORIAL_PROCEDUALTERRAIN_H_
 #include "Texture.h"
+#include "../Res/TerrainConstant.h"
 #include <d3d12.h>
 #include <wrl/client.h>
 #include <stdint.h>
@@ -37,23 +38,6 @@ private:
   */
   struct ConstantBuffer
   {
-    struct TerrainData
-    {
-      DirectX::XMFLOAT2 reciprocalSize;
-      float scale;
-      float reciprocalScale;
-    };
-
-    struct PerFrameData
-    {
-      DirectX::XMFLOAT4X4A matViewProjection;
-      DirectX::XMFLOAT3A eye;
-      DirectX::XMFLOAT3A lightDir;
-      DirectX::XMFLOAT3A lightDiffuse;
-      DirectX::XMFLOAT3 lightAmbient;
-      float base;
-    };
-
     TerrainData cbTerrain;
     PerFrameData cbFrame;
   };

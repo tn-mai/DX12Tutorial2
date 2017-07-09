@@ -191,6 +191,9 @@
     <ClInclude Include="Src\ProcedualTerrain.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Res\TerrainConstant.h">
+      <Filter>リソース ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Res\VertexShader.hlsl">

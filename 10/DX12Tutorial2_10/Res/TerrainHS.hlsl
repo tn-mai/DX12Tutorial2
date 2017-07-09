@@ -1,23 +1,7 @@
 /**
 * @file TerrainHS.hlsl
 */
-
-struct TerrainData
-{
-  float2 reciprocalSize;
-  float scale;
-  float reciprocalScale;
-};
-
-struct PerFrameData
-{
-  float4x4 matViewProjection;
-  float3 eye;
-  float3 lightDir;
-  float3 lightDiffuse;
-  float3 lightAmbient;
-  float base;
-};
+#include "TerrainConstant.h"
 
 cbuffer Constant : register(b0)
 {

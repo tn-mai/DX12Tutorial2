@@ -194,6 +194,7 @@
     <ClCompile Include="Src\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Res\TerrainConstant.h" />
     <ClInclude Include="Src\Action.h" />
     <ClInclude Include="Src\Animation.h" />
     <ClInclude Include="Src\Audio.h" />
