@@ -2,12 +2,9 @@
 * @file ProcedualTerrain.cpp
 */
 #include "ProcedualTerrain.h"
-#include "Texture.h"
 #include "d3dx12.h"
 #include "PSO.h"
-#include "Texture.h"
 #include "Graphics.h"
-#include "GamePad.h"
 #include <DirectXMath.h>
 
 using Microsoft::WRL::ComPtr;
@@ -35,10 +32,11 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
     return false;
   }
 
+  const UINT vertexBufferSize = static_cast<UINT>(vertexCount * sizeof(Vertex));
   if (FAILED(device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
     D3D12_HEAP_FLAG_NONE,
-    &CD3DX12_RESOURCE_DESC::Buffer(vertexCount * sizeof(Vertex)),
+    &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
     D3D12_RESOURCE_STATE_GENERIC_READ,
     nullptr,
     IID_PPV_ARGS(&vertexBuffer)
@@ -54,11 +52,11 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   Vertex* pVertex = static_cast<Vertex*>(vertexBufferAddress);
 
   // 四角形を等分した頂点データを作成する.
-  const XMVECTORF32 factor = { static_cast<float>(sizeX) / static_cast<float>(width - 1), 1, -static_cast<float>(sizeZ) / static_cast<float>(height - 1), 1 };
-  const XMVECTORF32 offset = { -static_cast<float>(sizeX) * 0.5f, 0, static_cast<float>(sizeZ) * 0.5f, 0 };
+  const XMVECTOR factor = { static_cast<float>(sizeX) / static_cast<float>(width - 1), 1, -static_cast<float>(sizeZ) / static_cast<float>(height - 1), 1 };
+  const XMVECTOR offset = { -static_cast<float>(sizeX) * 0.5f, 0, static_cast<float>(sizeZ) * 0.5f, 0 };
   for (size_t z = 0; z < height; ++z) {
     for (size_t x = 0; x < width; ++x) {
-      const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
+      const XMVECTOR ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
       const XMVECTOR pos = ipos * factor + offset;
       XMStoreFloat3(&pVertex->position, pos);
       ++pVertex;
@@ -67,9 +65,9 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
   vertexBuffer->Unmap(0, nullptr);
   vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
   vertexBufferView.StrideInBytes = sizeof(Vertex);
-  vertexBufferView.SizeInBytes = static_cast<UINT>(vertexCount * sizeof(Vertex));
+  vertexBufferView.SizeInBytes = vertexBufferSize;
 
-  const int indexListSize = static_cast<int>(indexCount * sizeof(uint16_t));
+  const UINT indexListSize = static_cast<UINT>(indexCount * sizeof(uint16_t));
   if (FAILED(device->CreateCommittedResource(
     &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
     D3D12_HEAP_FLAG_NONE,
@@ -117,8 +115,6 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
 	  return false;
   }
   pConstantBuffer = static_cast<TerrainConstant*>(constantBufferAddress);
-  Update(0);
-
   constantBufferView.BufferLocation = constantBuffer->GetGPUVirtualAddress();
   constantBufferView.SizeInBytes = constantBufferSize;
   const UINT handleSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -138,12 +134,13 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12DescriptorHeap>& csuDescriptorHea
 
   offsetZ = 0;
   base = 0;
+  Update(0);
 
   return true;
 }
 
 /**
-* 更新
+* 更新.
 *
 * @param delta 経過時間.
 */
@@ -160,7 +157,7 @@ void ProcedualTerrain::Update(double delta)
       base += i * limitOffsetZ;
     }
     Graphics::Graphics& graphics = Graphics::Graphics::Get();
-	const XMMATRIX matEyeRot = XMMatrixRotationX(75.0f / 180.0f * 3.14159265f);
+	const XMMATRIX matEyeRot = XMMatrixRotationX(XMConvertToRadians(75.0f));
     const XMMATRIX matEye = matEyeRot * XMMatrixTranslation(0, 0, offsetZ - limitOffsetZ);
     const XMVECTOR eyePos = XMVector4Transform(XMVECTOR{ 0, 0, -75, 1 }, matEye);
     const XMVECTOR eyeForcus = XMVector4Transform(XMVECTOR{ 0, 0, 0, 1 }, matEye);
