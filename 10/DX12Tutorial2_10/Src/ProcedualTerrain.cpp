@@ -49,8 +49,8 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   Vertex* pVertex = static_cast<Vertex*>(vertexBufferAddress);
 
   // 四角形を等分した頂点データを作成する.
-  const XMVECTORF32 factor = { 100.0f / static_cast<float>(width - 1), 1, -100.0f / static_cast<float>(height - 1), 1 };
-  const XMVECTORF32 offset = { -50, 0, 50, 0 };
+  const XMVECTORF32 factor = { static_cast<float>(sizeX) / static_cast<float>(width - 1), 1, -static_cast<float>(sizeY) / static_cast<float>(height - 1), 1 };
+  const XMVECTORF32 offset = { -static_cast<float>(sizeX) * 0.5f, 0, static_cast<float>(sizeY) * 0.5f, 0 };
   for (size_t z = 0; z < height; ++z) {
     for (size_t x = 0; x < width; ++x) {
       const XMVECTORF32 ipos = { static_cast<float>(x), 0, static_cast<float>(z), 1 };
@@ -159,7 +159,7 @@ void ProcedualTerrain::Update()
 		rotEye.x += 2.0f / 180.0f * 3.1415926f;
 	}
 #endif
-    const float limitOffsetZ = 100.0f / static_cast<float>(height - 1);
+    const float limitOffsetZ = static_cast<float>(sizeY) / static_cast<float>(height - 1);
     static float offsetZ = 0;
     static float base = 0;
     offsetZ += 0.1f;
@@ -181,7 +181,7 @@ void ProcedualTerrain::Update()
 	constant.cbFrame.lightDiffuse = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightSpecular = XMFLOAT3A(0.8f, 0.8f, 0.7f);
 	constant.cbFrame.lightAmbient = XMFLOAT3A(0.1f, 0.05f, 0.1f);
-	constant.cbTerrain = { XMFLOAT2(1.0f / 100.0f, 1.0f / 100.0f), 25, base };
+	constant.cbTerrain = { XMFLOAT2(1.0f / static_cast<float>(sizeX), 1.0f / static_cast<float>(sizeY)), 30, base };
 	XMStoreFloat4x4A(&constant.cbFrame.matViewProjection, XMMatrixTranspose(matView * matProjection));
 }
 
