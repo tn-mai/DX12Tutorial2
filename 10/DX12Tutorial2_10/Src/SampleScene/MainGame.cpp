@@ -265,7 +265,7 @@ int MainGameScene::Update(::Scene::Context&, double delta)
     (itr - 3)->animeController.SetCellIndex('0' + ((fps / 100) % 10));
   }
 
-  terrain.Update();
+  terrain.Update(delta);
 
   if (producer.IsFinish()) {
     clearTime += delta;

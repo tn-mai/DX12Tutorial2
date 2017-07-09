@@ -112,7 +112,7 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
 	  return false;
   }
   pConstantBuffer = static_cast<ConstantBuffer*>(constantBufferAddress);
-  Update();
+  Update(0);
 
   constantBufferView.BufferLocation = constantBuffer->GetGPUVirtualAddress();
   constantBufferView.SizeInBytes = constantBufferSize;
@@ -132,14 +132,18 @@ bool ProcedualTerrain::Init(const ComPtr<ID3D12Device>& device, const ComPtr<ID3
   graphics.WaitForGpu();
 
   rotEye = { 75.0f / 180.0f * 3.14159265f, 0 };
+  offsetZ = 0;
+  base = 0;
 
   return true;
 }
 
 /**
 * XV
+*
+* @param delta Œo‰ßŽžŠÔ.
 */
-void ProcedualTerrain::Update()
+void ProcedualTerrain::Update(double delta)
 {
 	if (!pConstantBuffer) {
 		return;
@@ -160,12 +164,11 @@ void ProcedualTerrain::Update()
 	}
 #endif
     const float limitOffsetZ = static_cast<float>(sizeY) / static_cast<float>(height - 1);
-    static float offsetZ = 0;
-    static float base = 0;
-    offsetZ += 0.25f;
+    offsetZ += 4.0f * static_cast<float>(delta);
     if (offsetZ >= limitOffsetZ) {
-      offsetZ -= limitOffsetZ;
-      base += limitOffsetZ;
+      const float i = std::floor(offsetZ * (1.0f / limitOffsetZ));
+      offsetZ = std::fmod(offsetZ, limitOffsetZ);
+      base += i * limitOffsetZ;
     }
     Graphics::Graphics& graphics = Graphics::Graphics::Get();
 	ConstantBuffer& constant = *pConstantBuffer;

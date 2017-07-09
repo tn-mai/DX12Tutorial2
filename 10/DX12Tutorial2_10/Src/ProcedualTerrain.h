@@ -28,7 +28,7 @@ public:
   ProcedualTerrain& operator=(const ProcedualTerrain&) = default;
 
   bool Init(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& csuDescriptorHeap);
-  void Update();
+  void Update(double delta);
   void Draw(ID3D12GraphicsCommandList* commandList, uint32_t cbTableIndex) const;
 
 private:
@@ -69,6 +69,8 @@ private:
   ConstantBuffer* pConstantBuffer = nullptr;
   Resource::Texture texTerrain;
   DirectX::XMFLOAT2 rotEye;
+  float offsetZ;
+  float base;
 };
 
 #endif // DX12TUTORIAL_PROCEDUALTERRAIN_H_
