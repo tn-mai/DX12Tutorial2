@@ -61,24 +61,23 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
   uint PatchID : SV_PrimitiveID)
 {
   HS_CONSTANT_DATA_OUTPUT output;
-#if 0
-  const float3 e0 = 0.5f * (ip[0].worldPosition + ip[2].worldPosition);
-  const float3 e1 = 0.5f * (ip[0].worldPosition + ip[1].worldPosition);
-  const float3 e2 = 0.5f * (ip[1].worldPosition + ip[3].worldPosition);
-  const float3 e3 = 0.5f * (ip[2].worldPosition + ip[3].worldPosition);
-  const float3 center = 0.5f * (e1 + e3);
-  output.EdgeTessFactor[0] = CalcTessFactor(e0);
-  output.EdgeTessFactor[1] = CalcTessFactor(e1);
-  output.EdgeTessFactor[2] = CalcTessFactor(e2);
-  output.EdgeTessFactor[3] = CalcTessFactor(e3);
-  output.InsideTessFactor[0] = output.InsideTessFactor[1] = CalcTessFactor(center);
+#if 1
+  const float4 a = { ip[0].worldPosition.y, ip[0].worldPosition.y, ip[1].worldPosition.y, ip[2].worldPosition.y };
+  const float4 b = { ip[2].worldPosition.y, ip[1].worldPosition.y, ip[3].worldPosition.y, ip[3].worldPosition.y };
+  const float4 edge = min(4, (a + b) * 0.5 * 8);
+  output.EdgeTessFactor[0] = edge.x;
+  output.EdgeTessFactor[1] = edge.y;
+  output.EdgeTessFactor[2] = edge.z;
+  output.EdgeTessFactor[3] = edge.w;
+  const float center = (edge.y + edge.w) * 0.5;
+  output.InsideTessFactor[0] = output.InsideTessFactor[1] = min(4.0, center);
 #else
-  output.EdgeTessFactor[0] = 6.0f;
-  output.EdgeTessFactor[1] = 6.0f;
-  output.EdgeTessFactor[2] = 6.0f;
-  output.EdgeTessFactor[3] = 6.0f;
-  output.InsideTessFactor[0] = 6.0f;
-  output.InsideTessFactor[1] = 6.0f;
+  output.EdgeTessFactor[0] = 4.0f;
+  output.EdgeTessFactor[1] = 4.0f;
+  output.EdgeTessFactor[2] = 4.0f;
+  output.EdgeTessFactor[3] = 4.0f;
+  output.InsideTessFactor[0] = 4.0f;
+  output.InsideTessFactor[1] = 4.0f;
 #endif
   return output;
 }

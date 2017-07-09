@@ -94,7 +94,7 @@ DS_OUTPUT main(
     domain.y);
   output.texcoord = (output.worldPosition.xz + float2(0, cbTerrain.base)) * cbTerrain.reciprocalSize;
   const float h = HeightMap(output.texcoord);
-  output.worldPosition.y = max(0, 1 - (output.worldPosition.y + h) * 2) * cbTerrain.scale;
+  output.worldPosition.y = max(0, (output.worldPosition.y + h) * 2 - 1) * cbTerrain.scale;
   output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
 
   output.height4 = lerp(

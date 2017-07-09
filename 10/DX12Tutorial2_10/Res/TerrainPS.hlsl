@@ -74,7 +74,7 @@ float3 EstimateNormal(float2 texcoord, float4 height4)
   height4.y += HeightMap(texcoord + float2(0, -offset.y));
   height4.z += HeightMap(texcoord + float2(offset.x, 0));
   height4.w += HeightMap(texcoord + float2(-offset.x, 0));
-  height4 = max(0, 1 - height4 * 2) * cbTerrain.scale;
+  height4 = max(0, height4 * 2 - 1) * cbTerrain.scale;
   height4.xw -= height4.yz;
   offset *= cbTerrain.scale * 2;
   const float3 vz = float3(0, height4.x, offset.y);
