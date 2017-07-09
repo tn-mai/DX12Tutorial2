@@ -283,6 +283,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Res\Objects.png" />
+    <Image Include="Res\Terrain.png" />
     <Image Include="Res\TextFont.png" />
     <Image Include="Res\Title.png" />
     <Image Include="Res\UnknownPlanet.png" />
