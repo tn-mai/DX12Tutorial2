@@ -92,6 +92,8 @@ bool CreatePSO(PSO& pso, ID3D12Device* device, bool warp, const wchar_t* vs, con
 		if (hs && ds) {
 			rootParameters[0].InitAsDescriptorTable(_countof(descRange0), descRange0);
 			rootParameters[1].InitAsDescriptorTable(_countof(descRange1), descRange1);
+			staticSampler->AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			staticSampler->AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			rsDesc = { 2, rootParameters, _countof(staticSampler), staticSampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT };
 		} else {
 			rootParameters[0].InitAsDescriptorTable(_countof(descRange0), descRange0);
