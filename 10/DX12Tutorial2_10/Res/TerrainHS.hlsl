@@ -39,16 +39,24 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
   uint PatchID : SV_PrimitiveID)
 {
   HS_CONSTANT_DATA_OUTPUT output;
-#if 1
-  const float4 a = { ip[0].worldPosition.y, ip[0].worldPosition.y, ip[1].worldPosition.y, ip[2].worldPosition.y };
-  const float4 b = { ip[2].worldPosition.y, ip[1].worldPosition.y, ip[3].worldPosition.y, ip[3].worldPosition.y };
-  const float4 edge = min(4, (a + b) * 0.5 * 8);
+#if 0
+  float4 isLand = step(terrainSeaHeight * 0.5, float4(ip[0].worldPosition.y, ip[1].worldPosition.y, ip[2].worldPosition.y, ip[3].worldPosition.y));
+  float factor = 1.0 + any(isLand) * 3.0;
+  output.EdgeTessFactor[0] =
+  output.EdgeTessFactor[1] =
+  output.EdgeTessFactor[2] =
+  output.EdgeTessFactor[3] =
+  output.InsideTessFactor[0] = output.InsideTessFactor[1] = factor;
+#elif 1
+  const float4 h = { ip[0].worldPosition.y, ip[1].worldPosition.y, ip[2].worldPosition.y, ip[3].worldPosition.y };
+  const float4 edge = min(4, max(0, h.xxyz + h.zyww - terrainSeaHeight) * 0.5 * (1.0 / (1 - terrainSeaHeight)) * 12 + 1);
+  const float2 center = (edge.xy + edge.zw) * 0.5;
   output.EdgeTessFactor[0] = edge.x;
   output.EdgeTessFactor[1] = edge.y;
   output.EdgeTessFactor[2] = edge.z;
   output.EdgeTessFactor[3] = edge.w;
-  const float center = (edge.y + edge.w) * 0.5;
-  output.InsideTessFactor[0] = output.InsideTessFactor[1] = min(4.0, center);
+  output.InsideTessFactor[0] = center.x;
+  output.InsideTessFactor[1] = center.y;
 #else
   output.EdgeTessFactor[0] = 4.0f;
   output.EdgeTessFactor[1] = 4.0f;
@@ -61,7 +69,7 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
 }
 
 [domain("quad")]
-[partitioning("fractional_even")]
+[partitioning("integer")]
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("CalcHSPatchConstants")]

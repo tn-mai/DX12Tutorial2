@@ -1,8 +1,6 @@
 /**
 * @file TerrainDS.hlsl
 */
-#define TERRAIN_NOISE_BEGIN 2
-#define TERRAIN_NOISE_END 4
 #include "TerrainConstant.h"
 
 // ì¸óÕêßå‰ì_
@@ -42,8 +40,8 @@ DS_OUTPUT main(
     lerp(patch[2].worldPosition, patch[3].worldPosition, domain.x),
     domain.y);
   output.texcoord = (output.worldPosition.xz + float2(0, cbFrame.base)) * cbTerrain.reciprocalSize;
-  const float h = HeightMap(output.texcoord);
-  output.worldPosition.y = max(0, (output.worldPosition.y + h) * 2 * (1.0 / 0.9375) - 1) * cbTerrain.scale;
+  const float h = HeightMapDS(output.texcoord);
+  output.worldPosition.y = max(terrainSeaHeight, (output.worldPosition.y + h)) * cbTerrain.scale;
   output.vPosition = mul(float4(output.worldPosition, 1), cbFrame.matViewProjection);
 
   output.height4 = lerp(
@@ -51,9 +49,9 @@ DS_OUTPUT main(
     lerp(patch[2].height4, patch[3].height4, domain.x),
     domain.y);
   const float2 offset = float2(0.3f, 0.3f) * cbTerrain.reciprocalSize;
-  output.height4.x += HeightMap(output.texcoord + float2(0, offset.y));
-  output.height4.y += HeightMap(output.texcoord + float2(0, -offset.y));
-  output.height4.z += HeightMap(output.texcoord + float2(offset.x, 0));
-  output.height4.w += HeightMap(output.texcoord + float2(-offset.x, 0));
+  output.height4.x += HeightMapDS(output.texcoord + float2(0, offset.y));
+  output.height4.y += HeightMapDS(output.texcoord + float2(0, -offset.y));
+  output.height4.z += HeightMapDS(output.texcoord + float2(offset.x, 0));
+  output.height4.w += HeightMapDS(output.texcoord + float2(-offset.x, 0));
   return output;
 }

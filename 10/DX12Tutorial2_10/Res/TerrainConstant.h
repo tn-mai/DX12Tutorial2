@@ -51,6 +51,8 @@ CBUFFER TerrainConstant REGISTER(b0)
 	PerFrameData cbFrame;
 };
 
+static const FLOAT terrainSeaHeight = FLOAT(0.5);
+
 #undef FLOAT
 #undef FLOAT2
 #undef FLOAT3
@@ -77,25 +79,33 @@ float Noise(float2 st)
 }
 
 /// À•W‚É‘Î‰‚·‚é‚‚³‚ğæ“¾‚·‚é.
-float HeightMap(float2 texcoord)
+float HeightMapVS(float2 texcoord)
 {
   const float freq = 3.0;
   float value = 0;
-#if TERRAIN_NOISE_BEGIN <= 0 && TERRAIN_NOISE_END > 0
   value += Noise(texcoord * freq) * 0.5;
-#endif
-#if TERRAIN_NOISE_BEGIN <= 1 && TERRAIN_NOISE_END > 1
   value += Noise(texcoord * freq * 2.01) * 0.25;
-#endif
-#if TERRAIN_NOISE_BEGIN <= 2 && TERRAIN_NOISE_END > 2
+  return value;
+}
+
+/// À•W‚É‘Î‰‚·‚é‚‚³‚ğæ“¾‚·‚é.
+float HeightMapDS(float2 texcoord)
+{
+  const float freq = 3.0;
+  float value = 0;
+//  value += Noise(texcoord * freq * 2.01) * 0.25;
   value += Noise(texcoord * freq * 2.01 * 2.02) * 0.125;
-#endif
-#if TERRAIN_NOISE_BEGIN <= 3 && TERRAIN_NOISE_END > 3
   value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03) * 0.0625;
-#endif
-#if TERRAIN_NOISE_BEGIN <= 4 && TERRAIN_NOISE_END > 4
+  return value;
+}
+/// À•W‚É‘Î‰‚·‚é‚‚³‚ğæ“¾‚·‚é.
+float HeightMapPS(float2 texcoord)
+{
+  const float freq = 3.0;
+  float value = 0;
+//  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03) * 0.0625;
   value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01) * 0.03125 * 0.5;
-#endif
+//  value += Noise(texcoord * freq * 2.01 * 2.02 * 2.03 * 2.01 * 2.02 * 2.03) * 0.03125 * 0.0625;
   return value;
 }
 
